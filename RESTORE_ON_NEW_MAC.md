@@ -7,6 +7,6 @@
 5. The original source masters are committed under `source-masters/assets/`. Recreate `assets` as a symlink to that directory if the original `/Users/jiangpeihan/Desktop/assets` path is unavailable. The full archive provides a second copy; verify its supplied SHA-256 checksum first.
 6. Open the restored project directory in Codex.
 7. Run a simple local preview using the existing project scripts; do not rebuild from scratch.
-8. Continue only with the XHS real-device mobile framing hotfix: preserve full-bleed scenes and adjust scene-specific portrait positioning.
+8. Preserve the approved mobile framing state. Both 390×844 and 430×932 flows reach `FINAL_IDLE`, and the latest candidate passed the official XHS validator; do not redo the framing hotfix unless a new real-device issue is observed.
 
 The full archive is an independent recovery copy and contains hidden `.codex` files, assets, release artifacts, QA evidence, and documentation.

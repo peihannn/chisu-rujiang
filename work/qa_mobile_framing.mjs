@@ -83,11 +83,14 @@ async function flow(browser, width, height) {
   await page.screenshot({ path:`${outputRoot}/mobile-framing-${size}-ending.png` });
 
   const inViewport = box => box && box.x >= 0 && box.y >= 0 && box.x + box.width <= width && box.y + box.height <= height;
-  const pass = opening.objectPosition === '35% 50%'
+  const titleMovedInward = openingTitle
+    && openingTitle.x + openingTitle.width <= width * 0.85
+    && openingTitle.y + openingTitle.height <= height * 0.81;
+  const pass = opening.objectPosition === '30% 50%'
     && pavilion.objectPosition === '82% 50%'
     && ending.objectPosition === '82% 50%'
     && [opening, pavilion, ending].every(state => state.complete && state.naturalSize[0] > 0 && state.covers && state.sceneBackground === 'none')
-    && inViewport(openingTitle) && inViewport(paperTarget) && inViewport(fireflyTarget)
+    && titleMovedInward && inViewport(openingTitle) && inViewport(paperTarget) && inViewport(fireflyTarget)
     && final.title === '尺素入江' && final.titleVisible && final.endingStill && final.animation === 'none'
     && final.body[0] === width && final.body[1] === height
     && issues.length === 0;
