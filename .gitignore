@@ -4,3 +4,7 @@ node_modules/
 *.log
 work/opening-390-candidate*.png
 work/opening-390-current.png
+work/opening-text-before-*.png
+work/opening-text-candidate-*.png
+work/pavilion-text-before-*.png
+work/pavilion-text-candidate-*.png

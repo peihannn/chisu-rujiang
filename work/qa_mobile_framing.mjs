@@ -17,11 +17,12 @@ function monitor(page) {
 async function artState(page, sceneId) {
   return page.evaluate(sceneId => {
     const scene = document.getElementById(sceneId);
-    const art = scene.querySelector(':scope > .scene-art');
+    const art = scene.querySelector(':scope > .scene-art-frame > .scene-art');
     const style = getComputedStyle(art);
     const box = art.getBoundingClientRect();
     return {
       src:art.getAttribute('src'),
+      currentSrc:new URL(art.currentSrc).pathname,
       objectPosition:style.objectPosition,
       objectFit:style.objectFit,
       complete:art.complete,
@@ -42,9 +43,18 @@ async function flow(browser, width, height) {
 
   const opening = await artState(page, 'landing');
   const openingTitle = await page.locator('.landing-title').boundingBox();
+  const openingText = await page.evaluate(() => {
+    lineIndex = lines.length;
+    charIndex = 0;
+    typed = true;
+    container.innerHTML = lines.slice(0, 5).join('<br>');
+    const range = document.createRange();
+    range.selectNodeContents(container);
+    const box = range.getBoundingClientRect();
+    return { x:box.x, y:box.y, width:box.width, height:box.height, right:box.right, bottom:box.bottom };
+  });
   await page.screenshot({ path:`${outputRoot}/mobile-framing-${size}-opening.png` });
 
-  await page.evaluate(() => { typed = true; });
   await page.locator('#landing').tap();
   await page.waitForSelector('#compose.active');
   await page.locator('#compose .menu-item[data-choice="去"]').tap();
@@ -57,6 +67,7 @@ async function flow(browser, width, height) {
   await page.locator('#weave .cinematic-choice[data-destination="water"]').tap();
 
   await page.waitForSelector('.river-paper-hit-target.is-enabled', { timeout:20000 });
+  const farewell = await artState(page, 'act2');
   const paperTarget = await page.locator('.river-paper-hit-target').boundingBox();
   await page.locator('.river-paper-hit-target').tap();
 
@@ -76,7 +87,7 @@ async function flow(browser, width, height) {
     title:document.getElementById('pavilionEndingTitle').textContent.trim(),
     titleVisible:document.getElementById('pavilionEndingTitle').classList.contains('is-visible'),
     endingStill:document.getElementById('pavilionArrival').classList.contains('is-cinematic-ending-still'),
-    animation:getComputedStyle(document.querySelector('#pavilionArrival > .scene-art')).animationName,
+    animation:getComputedStyle(document.querySelector('#pavilionArrival > .scene-art-frame > .scene-art')).animationName,
     viewport:[innerWidth, innerHeight],
     body:[document.body.scrollWidth, document.body.scrollHeight]
   }));
@@ -86,16 +97,21 @@ async function flow(browser, width, height) {
   const titleMovedInward = openingTitle
     && openingTitle.x + openingTitle.width <= width * 0.85
     && openingTitle.y + openingTitle.height <= height * 0.81;
-  const pass = opening.objectPosition === '30% 50%'
-    && pavilion.objectPosition === '82% 50%'
-    && ending.objectPosition === '82% 50%'
-    && [opening, pavilion, ending].every(state => state.complete && state.naturalSize[0] > 0 && state.covers && state.sceneBackground === 'none')
-    && titleMovedInward && inViewport(openingTitle) && inViewport(paperTarget) && inViewport(fireflyTarget)
+  const openingTextSafe = openingText.x >= 24
+    && openingText.right <= width
+    && openingText.y >= height * 0.16
+    && openingText.bottom < openingTitle.y;
+  const pass = opening.currentSrc.endsWith('/assets/bg_warm_mobile.webp')
+    && farewell.currentSrc.endsWith('/assets/bg_farewell_mobile.webp')
+    && pavilion.currentSrc.endsWith('/assets/bg_pavilion_close_mobile.webp')
+    && ending.currentSrc.endsWith('/assets/bg_pavilion_close_mobile.webp')
+    && [opening, farewell, pavilion, ending].every(state => state.objectPosition === '50% 50%' && state.complete && state.naturalSize[0] > 0 && state.covers && state.sceneBackground === 'none')
+    && titleMovedInward && openingTextSafe && inViewport(openingTitle) && inViewport(paperTarget) && inViewport(fireflyTarget)
     && final.title === '尺素入江' && final.titleVisible && final.endingStill && final.animation === 'none'
     && final.body[0] === width && final.body[1] === height
     && issues.length === 0;
   await context.close();
-  return { size, pass, opening, pavilion, ending, openingTitle, paperTarget, fireflyTarget, final, issues };
+  return { size, pass, opening, farewell, pavilion, ending, openingText, openingTitle, paperTarget, fireflyTarget, final, issues };
 }
 
 async function desktopInvariant(browser) {
@@ -109,14 +125,23 @@ async function desktopInvariant(browser) {
     document.getElementById('pavilionArrival').classList.add('active', 'is-visible');
   });
   const pavilion = await artState(page, 'pavilionArrival');
-  const pass = opening.objectPosition === '50% 50%' && pavilion.objectPosition === '50% 50%' && issues.length === 0;
+  const pass = opening.currentSrc.endsWith('/assets/bg_warm.webp')
+    && pavilion.currentSrc.endsWith('/assets/bg_pavilion_close.webp')
+    && opening.objectPosition === '50% 50%'
+    && pavilion.objectPosition === '50% 50%'
+    && issues.length === 0;
   await context.close();
   return { pass, opening:opening.objectPosition, pavilion:pavilion.objectPosition, issues };
 }
 
 const browser = await chromium.launch({ channel:'chrome', headless:true, args:['--autoplay-policy=no-user-gesture-required'] });
 try {
-  const results = await Promise.all([flow(browser, 390, 844), flow(browser, 430, 932)]);
+  const results = await Promise.all([
+    flow(browser, 360, 800),
+    flow(browser, 375, 812),
+    flow(browser, 390, 844),
+    flow(browser, 430, 932)
+  ]);
   const desktop = await desktopInvariant(browser);
   const report = { pass:results.every(result => result.pass) && desktop.pass, results, desktop };
   console.log(JSON.stringify(report, null, 2));

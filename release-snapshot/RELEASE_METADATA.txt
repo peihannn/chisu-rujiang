@@ -1,0 +1,5 @@
+filename: chisu-xhs-release.zip
+source path: /Users/jiangpeihan/Desktop/chisu-xhs-release.zip
+bytes: 3132263
+SHA-256: bd385857b4bc87cf4a0d9773f8b98bfb495663f5aa5d921bb2b2ec1756c285e2
+timestamp: 2026-09-04 17:37:57 +0800

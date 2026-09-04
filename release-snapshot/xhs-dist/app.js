@@ -475,7 +475,7 @@
     let riverPaperContext = null, riverPaperFrame = 0, riverPaperStartedAt = 0, riverPaperPressedAt = 0, riverPaperOcclusionAt = 0, riverPaperHintAt = 0, riverPaperHintTimer = 0, riverPaperResizeObserver = null, riverPaperWindowResizeListening = false;
     let riverPaperBounds = null, riverPaperComposite = null, riverPaperCompositeContext = null;
     const riverPaperTexture = new Image();
-    const riverPaperBackground = document.querySelector('#act2 > .scene-art');
+    const riverPaperBackground = document.querySelector('#act2 > .scene-art-frame > .scene-art');
     riverPaperTexture.src = 'assets/interaction1_old_paper.webp';
     let pavilionInteractionPhase = 'hidden', pavilionInteractionLocked = false, pavilionEndingPhase = 'idle';
     const pavilionFireflyFadeMs = 550;

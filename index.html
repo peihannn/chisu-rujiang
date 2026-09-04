@@ -5,9 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#b7a071" />
   <link rel="icon" href="data:," />
-  <link rel="preload" as="image" href="./assets/bg_warm.png" />
-  <link rel="preload" as="image" href="./assets/bg_farewell.png" />
-  <link rel="preload" as="image" href="./assets/bg_pavilion_close.png" />
+  <link rel="preload" as="image" href="./assets/bg_warm.png" media="(min-width: 601px), (orientation: landscape)" />
+  <link rel="preload" as="image" href="./assets/bg_warm_mobile.webp" media="(max-width: 600px) and (orientation: portrait)" />
+  <link rel="preload" as="image" href="./assets/bg_farewell.png" media="(min-width: 601px), (orientation: landscape)" />
+  <link rel="preload" as="image" href="./assets/bg_farewell_mobile.webp" media="(max-width: 600px) and (orientation: portrait)" />
+  <link rel="preload" as="image" href="./assets/bg_pavilion_close.png" media="(min-width: 601px), (orientation: landscape)" />
+  <link rel="preload" as="image" href="./assets/bg_pavilion_close_mobile.webp" media="(max-width: 600px) and (orientation: portrait)" />
   <title>尺素入江</title>
   <style>
     @font-face {
@@ -891,6 +894,15 @@
       static local image in the initial DOM. Camera motion stays on that image,
       below all narrative, paper, firefly and hit-target layers.
     */
+    .scene-art-frame {
+      position:absolute;
+      top:0;
+      right:0;
+      bottom:0;
+      left:0;
+      z-index:0;
+      pointer-events:none;
+    }
     .scene-art {
       position:absolute;
       top:0;
@@ -903,29 +915,24 @@
       display:block;
       object-fit:cover;
       object-position:center;
-      z-index:0;
       pointer-events:none;
       transform:scale(1.012);
       transform-origin:center;
       will-change:transform;
     }
     @media (max-width:600px) and (orientation:portrait) {
-      #landing > .scene-art { object-position:30% 50%; }
+      #landing .opening-text-container { left:70% !important; line-height:calc(1em + 12px) !important; }
       #landing .landing-title { right:16% !important; bottom:20% !important; }
-      #compose > .scene-art,
-      #journey > .scene-art,
-      #weave > .scene-art { object-position:35% 50%; }
-      #act2 > .scene-art { object-position:50% 50%; }
-      #pavilionArrival > .scene-art { object-position:82% 50%; }
+      #pavilionArrival .pavilion-narrative { left:0%; }
     }
 
     /* Camera arc: memory breathes, the journey advances, choices settle, ending rests. */
-    #landing.active > .scene-art { animation:camera-breathe var(--camera-breathe) var(--motion-ease) infinite alternate; }
-    #compose.active > .scene-art { animation:camera-choice-still var(--camera-still) var(--motion-ease) infinite alternate; }
-    #journey.active > .scene-art { animation:camera-journey-drift var(--camera-drift) var(--motion-ease) infinite alternate; }
-    #weave.active > .scene-art { animation:camera-choice-still var(--camera-still) var(--motion-ease) infinite alternate; }
-    #act2.is-visible > .scene-art { animation:camera-river-push 15s var(--motion-ease) infinite alternate; }
-    #pavilionArrival.is-visible > .scene-art { animation:camera-pavilion-still var(--camera-still) var(--motion-ease) infinite alternate; }
+    #landing.active > .scene-art-frame > .scene-art { animation:camera-breathe var(--camera-breathe) var(--motion-ease) infinite alternate; }
+    #compose.active > .scene-art-frame > .scene-art { animation:camera-choice-still var(--camera-still) var(--motion-ease) infinite alternate; }
+    #journey.active > .scene-art-frame > .scene-art { animation:camera-journey-drift var(--camera-drift) var(--motion-ease) infinite alternate; }
+    #weave.active > .scene-art-frame > .scene-art { animation:camera-choice-still var(--camera-still) var(--motion-ease) infinite alternate; }
+    #act2.is-visible > .scene-art-frame > .scene-art { animation:camera-river-push 15s var(--motion-ease) infinite alternate; }
+    #pavilionArrival.is-visible > .scene-art-frame > .scene-art { animation:camera-pavilion-still var(--camera-still) var(--motion-ease) infinite alternate; }
     @keyframes camera-breathe {
       from { transform:scale(1.012) translate3d(-2px,1px,0); }
       to { transform:scale(1.018) translate3d(3px,-2px,0); }
@@ -948,15 +955,15 @@
     }
 
     /* Narrative and interactions deliberately quiet the lens; the world remains present but does not compete. */
-    #journey.is-cinematic-text-focus > .scene-art { animation:camera-choice-still 22s var(--motion-ease) infinite alternate; }
-    #act2.is-cinematic-text-focus > .scene-art { animation:camera-choice-still 22s var(--motion-ease) infinite alternate; }
-    #pavilionArrival.is-cinematic-text-focus > .scene-art { animation:camera-choice-still 24s var(--motion-ease) infinite alternate; }
-    #act2.is-cinematic-interaction-hold > .scene-art {
+    #journey.is-cinematic-text-focus > .scene-art-frame > .scene-art { animation:camera-choice-still 22s var(--motion-ease) infinite alternate; }
+    #act2.is-cinematic-text-focus > .scene-art-frame > .scene-art { animation:camera-choice-still 22s var(--motion-ease) infinite alternate; }
+    #pavilionArrival.is-cinematic-text-focus > .scene-art-frame > .scene-art { animation:camera-choice-still 24s var(--motion-ease) infinite alternate; }
+    #act2.is-cinematic-interaction-hold > .scene-art-frame > .scene-art {
       animation:none;
       transform:scale(1) translate3d(0,0,0);
     }
-    #pavilionArrival.is-cinematic-interaction-hold > .scene-art,
-    #pavilionArrival.is-cinematic-ending-still > .scene-art {
+    #pavilionArrival.is-cinematic-interaction-hold > .scene-art-frame > .scene-art,
+    #pavilionArrival.is-cinematic-ending-still > .scene-art-frame > .scene-art {
       animation:none;
       transform:scale(1.006) translate3d(0,0,0);
     }
@@ -1022,10 +1029,10 @@
     }
 
     @media (max-width:700px) {
-      #landing.active > .scene-art { animation:camera-breathe-mobile 16s var(--motion-ease) infinite alternate; }
-      #journey.active > .scene-art,
-      #act2.is-visible > .scene-art { animation:camera-mobile-drift 18s var(--motion-ease) infinite alternate; }
-      #pavilionArrival.is-visible > .scene-art { animation:camera-choice-still 22s var(--motion-ease) infinite alternate; }
+      #landing.active > .scene-art-frame > .scene-art { animation:camera-breathe-mobile 16s var(--motion-ease) infinite alternate; }
+      #journey.active > .scene-art-frame > .scene-art,
+      #act2.is-visible > .scene-art-frame > .scene-art { animation:camera-mobile-drift 18s var(--motion-ease) infinite alternate; }
+      #pavilionArrival.is-visible > .scene-art-frame > .scene-art { animation:camera-choice-still 22s var(--motion-ease) infinite alternate; }
       @keyframes camera-breathe-mobile {
         from { transform:scale(1.006) translate3d(-1px,1px,0); }
         to { transform:scale(1.011) translate3d(1px,-1px,0); }
@@ -1035,12 +1042,12 @@
         to { transform:scale(1.016) translate3d(2px,-1px,0); }
       }
     }
-    #act2.is-visible.is-cinematic-interaction-hold > .scene-art {
+    #act2.is-visible.is-cinematic-interaction-hold > .scene-art-frame > .scene-art {
       animation:none !important;
       transform:scale(1) translate3d(0,0,0) !important;
     }
-    #pavilionArrival.is-visible.is-cinematic-interaction-hold > .scene-art,
-    #pavilionArrival.is-visible.is-cinematic-ending-still > .scene-art {
+    #pavilionArrival.is-visible.is-cinematic-interaction-hold > .scene-art-frame > .scene-art,
+    #pavilionArrival.is-visible.is-cinematic-ending-still > .scene-art-frame > .scene-art {
       animation:none !important;
       transform:scale(1.006) translate3d(0,0,0) !important;
     }
@@ -1056,12 +1063,12 @@
 </head>
 <body>
   <main aria-label="尺素入江">
-    <section id="landing" class="scene warm active" aria-label="开场"><img class="scene-art" src="./assets/bg_warm.png" alt="" aria-hidden="true" /><img class="fireflies" src="assets/fireflies.png" alt="" /><div id="openingText" class="opening-text-container"></div><div class="landing-title">尺素入江</div><div class="landing-hint">轻触继续</div></section>
-    <section id="compose" class="scene warm compose-screen" aria-label="选题"><img class="scene-art" src="./assets/bg_warm.png" alt="" aria-hidden="true" /><img class="fireflies" src="assets/fireflies.png" alt="" /><div class="top-title-group"><div class="title-main">今日 · 立秋</div><div class="title-sub">秋雨湿阶。你的信，写给故园与归途。</div><div class="title-section">从岸边，拣一张题签</div><div class="title-sub-small">老人把竹筏停在芦苇边。哪一句顺眼，就替他拣哪一句。</div></div><div class="menu-container"><div class="menu-item" data-choice="去"><div class="menu-char">去</div><div class="menu-desc">想去个一直没去的地方</div></div><div class="menu-item" data-choice="做"><div class="menu-char">做</div><div class="menu-desc">想把拖很久的事做完</div></div><div class="menu-item" data-choice="说"><div class="menu-char">说</div><div class="menu-desc">想跟一个人说句话</div></div><div class="menu-item" data-choice="放"><div class="menu-char">放</div><div class="menu-desc">想把一件事放下</div></div><div class="menu-item" data-choice="写"><div class="menu-char">写</div><div class="menu-desc">自己写一句</div></div></div></section>
-    <section id="journey" class="scene warm" aria-label="心路历程"><img class="scene-art" src="./assets/bg_warm.png" alt="" aria-hidden="true" /><img class="fireflies" src="assets/fireflies.png" alt="" /><div class="narrative-layer"><div class="narrative-beat" id="journeyBeat" aria-live="polite"></div></div></section>
-    <section id="weave" class="scene warm" aria-label="去处选择"><img class="scene-art" src="./assets/bg_warm.png" alt="" aria-hidden="true" /><img class="fireflies" src="assets/fireflies.png" alt="" /><div class="cinematic-choice-stage choice-group" aria-label="择一处"><button class="cinematic-choice" data-destination="net">夹进旧网</button><button class="cinematic-choice" data-destination="water">放回水面</button></div></section>
+    <section id="landing" class="scene warm active" aria-label="开场"><picture class="scene-art-frame"><source media="(max-width: 600px) and (orientation: portrait)" srcset="./assets/bg_warm_mobile.webp" /><img class="scene-art" src="./assets/bg_warm.png" alt="" aria-hidden="true" /></picture><img class="fireflies" src="assets/fireflies.png" alt="" /><div id="openingText" class="opening-text-container"></div><div class="landing-title">尺素入江</div><div class="landing-hint">轻触继续</div></section>
+    <section id="compose" class="scene warm compose-screen" aria-label="选题"><picture class="scene-art-frame"><source media="(max-width: 600px) and (orientation: portrait)" srcset="./assets/bg_warm_mobile.webp" /><img class="scene-art" src="./assets/bg_warm.png" alt="" aria-hidden="true" /></picture><img class="fireflies" src="assets/fireflies.png" alt="" /><div class="top-title-group"><div class="title-main">今日 · 立秋</div><div class="title-sub">秋雨湿阶。你的信，写给故园与归途。</div><div class="title-section">从岸边，拣一张题签</div><div class="title-sub-small">老人把竹筏停在芦苇边。哪一句顺眼，就替他拣哪一句。</div></div><div class="menu-container"><div class="menu-item" data-choice="去"><div class="menu-char">去</div><div class="menu-desc">想去个一直没去的地方</div></div><div class="menu-item" data-choice="做"><div class="menu-char">做</div><div class="menu-desc">想把拖很久的事做完</div></div><div class="menu-item" data-choice="说"><div class="menu-char">说</div><div class="menu-desc">想跟一个人说句话</div></div><div class="menu-item" data-choice="放"><div class="menu-char">放</div><div class="menu-desc">想把一件事放下</div></div><div class="menu-item" data-choice="写"><div class="menu-char">写</div><div class="menu-desc">自己写一句</div></div></div></section>
+    <section id="journey" class="scene warm" aria-label="心路历程"><picture class="scene-art-frame"><source media="(max-width: 600px) and (orientation: portrait)" srcset="./assets/bg_warm_mobile.webp" /><img class="scene-art" src="./assets/bg_warm.png" alt="" aria-hidden="true" /></picture><img class="fireflies" src="assets/fireflies.png" alt="" /><div class="narrative-layer"><div class="narrative-beat" id="journeyBeat" aria-live="polite"></div></div></section>
+    <section id="weave" class="scene warm" aria-label="去处选择"><picture class="scene-art-frame"><source media="(max-width: 600px) and (orientation: portrait)" srcset="./assets/bg_warm_mobile.webp" /><img class="scene-art" src="./assets/bg_warm.png" alt="" aria-hidden="true" /></picture><img class="fireflies" src="assets/fireflies.png" alt="" /><div class="cinematic-choice-stage choice-group" aria-label="择一处"><button class="cinematic-choice" data-destination="net">夹进旧网</button><button class="cinematic-choice" data-destination="water">放回水面</button></div></section>
     <section id="act2" class="scene" aria-label="入江">
-      <img class="scene-art" src="./assets/bg_farewell.png" alt="" aria-hidden="true" />
+      <picture class="scene-art-frame"><source media="(max-width: 600px) and (orientation: portrait)" srcset="./assets/bg_farewell_mobile.webp" /><img class="scene-art" src="./assets/bg_farewell.png" alt="" aria-hidden="true" /></picture>
       <img class="fireflies" src="assets/fireflies.png" alt="" />
       <div class="act2-cinematic-shimmer" aria-hidden="true"></div>
       <div class="act2-boat-mist" aria-hidden="true"></div>
@@ -1079,7 +1086,7 @@
       <div class="act2-next-hook" aria-live="polite"></div>
     </section>
     <section id="pavilionArrival" class="scene" aria-label="亭前">
-      <img class="scene-art" src="./assets/bg_pavilion_close.png" alt="" aria-hidden="true" />
+      <picture class="scene-art-frame"><source media="(max-width: 600px) and (orientation: portrait)" srcset="./assets/bg_pavilion_close_mobile.webp" /><img class="scene-art" src="./assets/bg_pavilion_close.png" alt="" aria-hidden="true" /></picture>
       <div class="pavilion-mist-bridge" aria-hidden="true"></div>
       <div class="pavilion-firefly-guide" id="pavilionFireflyGuide">
         <div class="pavilion-firefly" id="pavilionFirefly" aria-hidden="true"><span class="pavilion-firefly-core"></span></div>
@@ -1578,7 +1585,7 @@
     let riverPaperContext = null, riverPaperFrame = 0, riverPaperStartedAt = 0, riverPaperPressedAt = 0, riverPaperOcclusionAt = 0, riverPaperHintAt = 0, riverPaperHintTimer = 0, riverPaperResizeObserver = null;
     let riverPaperBounds = null, riverPaperComposite = null, riverPaperCompositeContext = null;
     const riverPaperTexture = new Image();
-    const riverPaperBackground = document.querySelector('#act2 > .scene-art');
+    const riverPaperBackground = document.querySelector('#act2 > .scene-art-frame > .scene-art');
     riverPaperTexture.src = 'assets/interaction1_old_paper.png';
     let pavilionInteractionPhase = 'hidden', pavilionInteractionLocked = false, pavilionEndingPhase = 'idle';
     const pavilionFireflyFadeMs = 550;

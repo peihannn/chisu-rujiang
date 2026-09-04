@@ -11,14 +11,14 @@
 - Global cinematic polish and mobile interaction fixes are complete.
 - Paper, firefly, pavilion narrative, and audio interactions are implemented.
 - Choice Echo is intentionally not part of the release.
-- The official Xiaohongshu minitool skill is installed, used, and the latest release candidate passed validation.
+- The official Xiaohongshu minitool skill is installed and the latest release candidate passes the official size audit and package integrity checks.
 - The working tree is the current backup target; do not revert it to an earlier release hash.
 
 ## Packaging notes
 
 Raw OGG was rejected by the real XHS uploader. Production audio was therefore converted/embedded into JavaScript-compatible packaged data; runtime code was externalized as required, and compatibility was adjusted to the official skill.
 
-The known earlier official-skill-passing artifact was `chisu-xhs-release.zip` (2,802,201 bytes; SHA-256 `a8aa34081611a820c9e02351b789101b9da0c1afbde7d0bddb9df910076e8fbb`). It is historical only. The latest approved local/XHS-skill-validated release candidate is `chisu-xhs-release.zip`: 2,627,161 bytes; SHA-256 `c3427c104648e2faee632096a063f1bc8696bf6343fc9ff80a40df01ebecfbf9`.
+The known earlier official-skill-passing artifact was `chisu-xhs-release.zip` (2,802,201 bytes; SHA-256 `a8aa34081611a820c9e02351b789101b9da0c1afbde7d0bddb9df910076e8fbb`). It is historical only. The latest approved release is `chisu-xhs-release.zip` at `/Users/jiangpeihan/Desktop/chisu-xhs-release.zip` (also copied into this project and `release-snapshot/`): 3,132,263 bytes; SHA-256 `bd385857b4bc87cf4a0d9773f8b98bfb495663f5aa5d921bb2b2ec1756c285e2`; modified 2026-09-04 17:37:57 local time.
 
 ## Current release target
 
@@ -29,11 +29,11 @@ The known earlier official-skill-passing artifact was `chisu-xhs-release.zip` (2
 
 The runtime `assets/` path is a symlink to `/Users/jiangpeihan/Desktop/assets`. To make the backup independently restorable, the resolved original fonts, images, and audio are preserved under `source-masters/assets/` (26 files). This snapshot is non-runtime and does not alter the game. After a restore, recreate `assets` as a symlink to `source-masters/assets` if the original Desktop path is unavailable.
 
-## Latest approved mobile framing hotfix
+## Latest approved real-XHS portrait hotfixes
 
-The real-device mobile framing hotfix is complete. On mobile, the opening focal point is `30% 50%`; the raft is approximately 75% visible; and the title is positioned at right 16%, bottom 20%. Desktop remains `50% 50%`. The complete flow reaches `FINAL_IDLE` at both 390×844 and 430×932. The official Xiaohongshu validator passed.
+Portrait scenes now use dedicated WebP artwork through `<picture>` sources at `max-width: 600px` in portrait orientation: `bg_warm_mobile.webp`, `bg_farewell_mobile.webp`, and `bg_pavilion_close_mobile.webp`. Desktop continues to use the original artwork with the default centered object position (`50% 50%`). On portrait screens, opening text is `left: 70%` with `line-height: calc(1em + 12px)`; title placement is `right: 16%`, `bottom: 20%`; and the pavilion narrative is `left: 0%`. The final ending has no seal. QA evidence covers 360×800, 375×812, 390×844, and 430×932, and the current release reaches `FINAL_IDLE` in the tested flows.
 
-After restoration, preserve this approved state; do not redo the framing hotfix unless a new real-device issue is observed.
+No remaining code issue is currently recorded. After restoration, preserve this approved state; only investigate if a newly observed real-XHS-device issue is reproducible.
 
 ## Recent checkpoint files
 
