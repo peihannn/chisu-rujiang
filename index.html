@@ -1,0 +1,2280 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#b7a071" />
+  <link rel="icon" href="data:," />
+  <link rel="preload" as="image" href="./assets/bg_warm.png" />
+  <link rel="preload" as="image" href="./assets/bg_farewell.png" />
+  <link rel="preload" as="image" href="./assets/bg_pavilion_close.png" />
+  <title>尺素入江</title>
+  <style>
+    @font-face {
+      font-family:"Ma Shan Zheng";
+      src:url("assets/MaShanZheng-Regular.ttf") format("truetype");
+      font-style:normal;
+      font-weight:400;
+      font-display:swap;
+    }
+    @font-face {
+      font-family:"Ma Shan Zheng";
+      src:url("assets/MaShanZheng-Regular.ttf") format("truetype");
+      font-style:normal;
+      font-weight:500;
+      font-display:swap;
+    }
+    :root {
+      --ink:#3a2a1a;
+      --warm:#fff0c8;
+      --glow:0 1px 3px rgba(255,240,200,.7);
+      /* Global cinematic motion language — backgrounds move, narrative and hit targets do not. */
+      --motion-ease:cubic-bezier(.42,0,.22,1);
+      --camera-still:18s;
+      --camera-breathe:14s;
+      --camera-drift:13s;
+      --atmosphere-drift:18s;
+      --light-breathe:11s;
+      --text-reveal:900ms;
+      --scene-dissolve:1500ms;
+    }
+    * { box-sizing:border-box; }
+    html, body { width:100%; height:100%; margin:0; overflow:hidden; background:#b7a071; }
+    body { font-family:"Ma Shan Zheng", "STKaiti", cursive; color:var(--ink); -webkit-tap-highlight-color:transparent; user-select:none; }
+    button { appearance:none; border:0; background:transparent; color:inherit; font:inherit; padding:0; cursor:pointer; }
+    .audio-toggle {
+      position:fixed;
+      top:max(10px, env(safe-area-inset-top));
+      right:max(10px, env(safe-area-inset-right));
+      z-index:10000;
+      width:44px;
+      height:44px;
+      display:grid;
+      place-items:center;
+      color:rgba(58,42,26,.58);
+      font-family:"Ma Shan Zheng", cursive;
+      font-size:17px;
+      line-height:1;
+      letter-spacing:0;
+      text-shadow:0 1px 2px rgba(255,240,200,.38);
+      transition:color 260ms ease, opacity 260ms ease;
+      touch-action:manipulation;
+    }
+    .audio-toggle:hover,
+    .audio-toggle:focus-visible {
+      color:rgba(58,42,26,.88);
+      outline:none;
+      text-decoration:underline;
+      text-decoration-thickness:1px;
+      text-underline-offset:4px;
+    }
+    .audio-toggle[aria-pressed="true"] { color:rgba(88,61,37,.46); }
+    .scene { position:fixed; inset:0; display:none; isolation:isolate; overflow:hidden; background:#b7a071; }
+    .scene.active { display:block; }
+    .scene::after { content:""; position:absolute; inset:0; pointer-events:none; background:rgba(93,62,31,.035); z-index:1; }
+    .fireflies { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; mix-blend-mode:screen; opacity:.3; pointer-events:none; z-index:0; }
+    .ink { writing-mode:vertical-rl; text-orientation:mixed; color:var(--ink); text-shadow:var(--glow); letter-spacing:.12em; position:absolute; z-index:3; }
+    .asset { position:absolute; mix-blend-mode:multiply; pointer-events:none; z-index:2; }
+
+    /* Landing */
+    #landing { background:#b7a071; }
+    #landing .fireflies, #landing .cursor { display:none; }
+    #landing .opening-copy { position:absolute !important; left:5% !important; top:16% !important; width:16vw !important; max-width:220px !important; height:65vh !important; overflow:hidden !important; margin:0; writing-mode:vertical-rl !important; text-orientation:upright !important; line-height:3.5 !important; letter-spacing:.2em !important; white-space:normal !important; font-family:"Ma Shan Zheng", serif !important; color:#3a2a1a !important; text-shadow:0 1px 3px rgba(255, 240, 200, .7) !important; }
+    #landing .opening-copy br { display:none; }
+    #landing::before { content:"尺素入江"; position:absolute; right:8%; bottom:13%; z-index:3; writing-mode:vertical-rl; text-orientation:mixed; white-space:nowrap; color:#fff4dc; font-family:"Ma Shan Zheng", "STKaiti", cursive; font-size:clamp(58px,6vw,88px); line-height:1; letter-spacing:.08em; text-shadow:0 2px 4px rgba(0,0,0,.68); }
+    #landing::after { content:"轻触继续"; position:absolute; inset:auto; right:3.8%; bottom:12%; z-index:3; writing-mode:vertical-rl; text-orientation:mixed; color:#fff4dc; font-family:"Ma Shan Zheng", "STKaiti", cursive; font-size:clamp(15px,1.3vw,19px); letter-spacing:.18em; text-shadow:0 1px 3px rgba(0,0,0,.72); background:none; }
+    #landing .cursor { display:inline-block; width:1.25em; height:.11em; margin-top:.25em; background:var(--ink); opacity:.6; animation:blink 1.15s steps(1) infinite; }
+    @keyframes blink { 50% { opacity:0; } }
+
+    /* Compose */
+    #compose .compose-copy { position:absolute; left:50%; transform:translateX(-50%); z-index:3; width:90%; text-align:center; color:var(--ink); text-shadow:var(--glow); white-space:nowrap; }
+    #compose .season { top:14%; color:#8e4030; font-size:clamp(27px,3vw,43px); letter-spacing:.25em; }
+    #compose .subtitle { top:21%; font-size:clamp(17px,1.65vw,24px); letter-spacing:.12em; }
+    #compose .prompt { top:28%; font-size:clamp(21px,2vw,29px); letter-spacing:.18em; }
+    #compose .guide { top:33%; font-size:clamp(15px,1.35vw,20px); letter-spacing:.1em; color:rgba(58,42,26,.78); }
+    #compose .topics { position:absolute; left:0; right:0; top:44%; transform:none; z-index:3; width:60vw; margin:0 auto; display:flex; justify-content:space-evenly; align-items:flex-start; gap:0; }
+    #compose .topic { position:relative; flex:0 0 80px; width:80px; min-height:31svh; writing-mode:horizontal-tb; color:#3a2a1a; text-shadow:0 1px 3px rgba(255,240,200,.7); transition:opacity .5s ease; }
+    #compose .topic-title { display:block; font-size:clamp(42px,4.1vw,60px); line-height:1; text-align:center; }
+    #compose .topic-note { position:absolute; top:calc(100% + 30px); left:50%; transform:translateX(-50%); width:50px; writing-mode:vertical-rl; text-orientation:upright; font-size:clamp(12px,1vw,14px); line-height:1.8; letter-spacing:.15em; color:rgba(58,42,26,.7); text-shadow:0 1px 3px rgba(255,240,200,.7); }
+    #compose .compose-copy, #compose .topic-title { color:#3a2a1a; text-shadow:0 1px 3px rgba(255,240,200,.7); }
+    #compose .topic:focus-visible { outline:1px solid rgba(58,42,26,.45); outline-offset:7px; }
+    #compose .topic:hover { opacity:.62; }
+    .scenario-grid {
+      display: flex !important;
+      justify-content: center !important;
+      align-items: flex-start !important;
+      gap: clamp(40px, 8vw, 120px) !important;
+      width: 90vw !important;
+      margin: 0 auto !important;
+      position: absolute !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+    }
+    .scenario-option {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      position: relative !important;
+    }
+    .big-char {
+      font-family: "Ma Shan Zheng", serif !important;
+      font-size: clamp(48px, 6vw, 64px) !important;
+      color: #3a2a1a !important;
+      text-shadow: 0 1px 3px rgba(255, 240, 200, 0.7) !important;
+      line-height: 1 !important;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+    .sub-desc {
+      writing-mode: vertical-rl !important;
+      text-orientation: upright !important;
+      font-family: "Ma Shan Zheng", serif !important;
+      font-size: 12px !important;
+      color: rgba(58, 42, 26, 0.75) !important;
+      height: 150px !important;
+      margin-top: 24px !important;
+      background: transparent !important;
+      border: none !important;
+      line-height: 1.8 !important;
+    }
+    .game, .compose-screen { filter: brightness(0.95) contrast(1.05) saturate(1.15) !important; }
+    .top-title-group {
+      position: absolute;
+      top: 12%;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      z-index: 30;
+    }
+    .title-main {
+      font-family: "Ma Shan Zheng", serif;
+      font-size: 44px;
+      color: #9e3b2e;
+      margin-bottom: 10px;
+    }
+    .title-sub {
+      font-family: "Ma Shan Zheng", serif;
+      font-size: 16px;
+      color: rgba(58, 42, 26, 0.8);
+      margin-bottom: 15px;
+    }
+    .title-section {
+      font-family: "Ma Shan Zheng", serif;
+      font-size: 22px;
+      color: #3a2a1a;
+      margin-top: 15px;
+      margin-bottom: 5px;
+    }
+    .title-sub-small {
+      font-family: "Ma Shan Zheng", serif;
+      font-size: 15px;
+      color: rgba(58, 42, 26, 0.75);
+    }
+    .menu-container {
+      position: absolute;
+      top: 48%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 90px;
+      z-index: 20;
+    }
+    .menu-item {
+      width: 90px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .menu-char {
+      font-family: "Ma Shan Zheng", serif;
+      font-size: 56px;
+      color: #4a3728;
+      text-shadow: 0 2px 10px rgba(255, 240, 200, 0.4), 0 1px 2px rgba(0, 0, 0, 0.15);
+      line-height: 1;
+      transition: all 0.4s ease;
+      cursor: pointer;
+    }
+    .menu-desc {
+      writing-mode: vertical-rl;
+      text-orientation: upright;
+      margin-top: 20px;
+      font-family: "Ma Shan Zheng", serif;
+      font-size: 13px;
+      color: rgba(43, 28, 16, 0.8);
+      line-height: 1.6;
+      height: 130px;
+    }
+    .menu-char:hover { color: #9e3b2e; transform: scale(1.05); }
+    .title-main, .title-sub, .title-section, .title-sub-small { letter-spacing: 0.2em; }
+    .title-main { color: #8d3b2e; text-shadow: 0 1px 2px rgba(58, 42, 26, 0.18); }
+    .journey-paper-container {
+      position: absolute !important;
+      left: 8% !important;
+      top: 18% !important;
+      width: 28vw !important;
+      max-width: 420px !important;
+      height: 58vh !important;
+      background-image: url("assets/paper_light.png") !important;
+      background-size: 100% 100% !important;
+      background-repeat: no-repeat !important;
+      mix-blend-mode: multiply !important;
+      border: none !important;
+      box-shadow: none !important;
+      filter: none !important;
+      display: flex !important;
+      justify-content: center !important;
+      align-items: center !important;
+      opacity: 0;
+      animation: journeyFadeIn 1s ease-in-out forwards !important;
+    }
+    .journey-text {
+      writing-mode: vertical-rl !important;
+      text-orientation: upright !important;
+      font-family: "Ma Shan Zheng", serif !important;
+      color: #3a2a1a !important;
+      text-shadow: 0 1px 3px rgba(255, 240, 200, 0.7) !important;
+      font-size: 20px !important;
+      line-height: 2.1 !important;
+      letter-spacing: 0.1em !important;
+      padding: 35px 30px !important;
+      max-height: 90% !important;
+      overflow: hidden !important;
+      text-align: left !important;
+    }
+    @keyframes journeyFadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
+    .game { filter: brightness(0.9) contrast(1.1) saturate(1.15) !important; }
+    .journey-final-paper {
+      position: absolute !important;
+      left: 6% !important;
+      top: 14% !important;
+      width: clamp(260px, 28vw, 360px) !important;
+      height: clamp(320px, 52vh, 480px) !important;
+      background-image: url("assets/paper_light.png") !important;
+      background-size: 100% 100% !important;
+      background-repeat: no-repeat !important;
+      background-color: transparent !important;
+      mix-blend-mode: multiply !important;
+      border: none !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      display: flex !important;
+      justify-content: center !important;
+      align-items: center !important;
+      opacity: 0;
+      animation: journeyFinalFade 1.5s ease-in-out forwards !important;
+    }
+    .journey-final-text {
+      writing-mode: vertical-rl !important;
+      text-orientation: upright !important;
+      font-family: "Ma Shan Zheng", serif !important;
+      color: #3a2a1a !important;
+      text-shadow: 0 1px 3px rgba(255, 240, 200, 0.7) !important;
+      font-size: 20px !important;
+      line-height: 2.2 !important;
+      letter-spacing: 0.15em !important;
+      max-height: 100% !important;
+      box-sizing: border-box !important;
+      padding: 40px 35px !important;
+      overflow: hidden !important;
+      text-align: left !important;
+    }
+    @keyframes journeyFinalFade { 0% { opacity: 0; } 100% { opacity: 1; } }
+    .journey-final-paper { display: none !important; }
+    .journey-final-zone {
+      position: absolute !important;
+      left: 17% !important;
+      top: 18% !important;
+      width: 15% !important;
+      max-width: 400px !important;
+      height: 55% !important;
+      z-index: 999 !important;
+      pointer-events: none !important;
+      background: transparent !important;
+    }
+    .journey-prop-paper {
+      position: absolute !important;
+      left: -20px !important;
+      top: -50px !important;
+      width: 260px !important;
+      height: 180px !important;
+      background-image: url("assets/paper_light.png") !important;
+      background-size: 100% 100% !important;
+      mix-blend-mode: multiply !important;
+      transform: rotate(-1.5deg) !important;
+      opacity: 0.85 !important;
+      filter: brightness(0.95) contrast(1.05) !important;
+      box-shadow: none !important;
+      border: none !important;
+    }
+    .journey-prop-text {
+      position: absolute !important;
+      top: 35px !important;
+      left: 70px !important;
+      writing-mode: vertical-rl !important;
+      text-orientation: upright !important;
+      font-family: "LXGW WenKai", sans-serif !important;
+      color: #44372D !important;
+      opacity: 0.88 !important;
+      font-size: 15px !important;
+      line-height: 1.8 !important;
+      text-shadow: 0 1px 2px rgba(255,240,200,0.5) !important;
+      background: transparent !important;
+    }
+    .journey-main-text {
+      position: absolute !important;
+      left: 5% !important;
+      top: -30px !important;
+      width: 80% !important;
+      height: 70% !important;
+      display: flex !important;
+      justify-content: space-between !important;
+      gap: 30px !important;
+    }
+    .journey-main-text p {
+      writing-mode: vertical-rl !important;
+      text-orientation: upright !important;
+      font-family: "LXGW WenKai", sans-serif !important;
+      color: #3A3029 !important;
+      opacity: 0.85 !important;
+      font-size: 17px !important;
+      line-height: 2.2 !important;
+      letter-spacing: 0.15em !important;
+      margin: 0 !important;
+      height: 100% !important;
+      text-shadow: 0 1px 4px rgba(255, 240, 200, 0.6) !important;
+      background: transparent !important;
+      border: none !important;
+    }
+    .game, .journey-screen { filter: brightness(0.92) contrast(1.08) saturate(1.15) !important; }
+    /* Journey — the paper is a found object, not a text panel. */
+    #journey .journey-prop {
+      position:absolute;
+      left:7%;
+      top:26%;
+      width:clamp(130px,10vw,170px);
+      height:clamp(82px,12vh,122px);
+      margin:0;
+      background:center / 100% 100% no-repeat url("assets/paper_light.png");
+      mix-blend-mode:multiply;
+      opacity:.64;
+      filter:contrast(.88) saturate(.82);
+      transform:rotate(-1.4deg);
+      z-index:2;
+      animation:journey-prop-reveal 900ms ease-out both;
+      pointer-events:none;
+    }
+    #journey .journey-prop-caption {
+      position:absolute;
+      top:17%;
+      right:25%;
+      height:66%;
+      margin:0;
+      writing-mode:vertical-rl;
+      text-orientation:upright;
+      font-family:"Ma Shan Zheng" !important;
+      font-size:clamp(12px,.92vw,15px);
+      line-height:1.65;
+      letter-spacing:.08em;
+      color:#44372d;
+      opacity:.72;
+    }
+    #journey .journey-story {
+      position:absolute;
+      left:16%;
+      top:19%;
+      width:min(18vw,280px);
+      height:42vh;
+      margin:0;
+      writing-mode:vertical-rl;
+      text-orientation:upright;
+      font-family:"Ma Shan Zheng" !important;
+      font-size:clamp(16px,1.3vw,19px);
+      line-height:3.05;
+      letter-spacing:.1em;
+      color:#3a3029;
+      opacity:.86;
+      overflow:hidden;
+      z-index:3;
+      animation:journey-story-reveal 900ms 130ms ease-out both;
+    }
+    @keyframes journey-prop-reveal {
+      from { opacity:0; transform:rotate(-1.4deg) translateY(6px); }
+      to { opacity:.64; transform:rotate(-1.4deg) translateY(0); }
+    }
+    @keyframes journey-story-reveal {
+      from { opacity:0; transform:translateY(4px); }
+      to { opacity:.86; transform:translateY(0); }
+    }
+    #journey::after { background:transparent; }
+    #journey .fireflies { opacity:.16; }
+    #journey .narrative-layer {
+      position:absolute;
+      left:37%;
+      top:20%;
+      width:12vw;
+      max-width:220px;
+      height:39vh;
+      z-index:3;
+      pointer-events:none;
+    }
+    #journey .narrative-beat {
+      display:flex;
+      flex-direction:row-reverse;
+      align-items:flex-start;
+      gap:clamp(24px,2.1vw,34px);
+      opacity:0;
+      transition:opacity 500ms ease-out;
+    }
+    #journey .narrative-beat.is-visible { opacity:1; }
+    #journey .vertical-column {
+      margin:0;
+      writing-mode:vertical-rl;
+      text-orientation:upright;
+      white-space:nowrap;
+      font-family:"Ma Shan Zheng" !important;
+      font-size:22px;
+      font-weight:400;
+      line-height:1.65;
+      letter-spacing:.12em;
+      color:rgba(51,42,34,.86);
+      text-rendering:optimizeLegibility;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      opacity:0;
+      animation:narrative-column-in 900ms ease-out forwards;
+      animation-delay:var(--column-delay, 0ms);
+    }
+    /* One shared anchor: first line reads at right, second line stays 22px lower at left. */
+    #journey .vertical-column:nth-child(2) { margin-top:22px; }
+    @keyframes narrative-column-in {
+      from { opacity:0; transform:translateY(5px); }
+      to { opacity:1; transform:translateY(0); }
+    }
+    /* Retire the prior parchment interaction language in this scene. */
+    #journey .journey-paper,
+    #weave .weave-paper,
+    .journey-paper-container,
+    .journey-final-paper,
+    .journey-final-zone,
+    .journey-prop-paper { display:none !important; }
+    #weave::after { background:transparent; }
+    #weave .fireflies { opacity:.16; }
+    @property --corner-length {
+      syntax: '<length>';
+      inherits: false;
+      initial-value: 14px;
+    }
+    #weave .cinematic-choice-stage {
+      position:absolute;
+      left:48%;
+      top:45%;
+      transform:translate(-50%, -50%);
+      z-index:3;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:clamp(64px,5.8vw,92px);
+      opacity:0;
+      animation:choice-stage-in 800ms 180ms ease-out forwards;
+    }
+    #weave .cinematic-choice-stage.is-departing { opacity:0; transform:translate(-50%, calc(-50% - 2px)); transition:opacity 500ms ease, transform 500ms ease; pointer-events:none; }
+    #weave .cinematic-choice {
+      position:relative;
+      box-sizing:border-box;
+      width:clamp(76px,6.5vw,84px);
+      height:clamp(246px,34vh,272px);
+      padding:22px 12px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      writing-mode:vertical-rl;
+      text-orientation:upright;
+      font-family:"Ma Shan Zheng" !important;
+      --corner-length:14px;
+      border:1px solid transparent;
+      border-radius:0;
+      background:
+        linear-gradient(rgba(79,60,43,.42), rgba(79,60,43,.42)) left top / var(--corner-length) 1px no-repeat,
+        linear-gradient(rgba(79,60,43,.42), rgba(79,60,43,.42)) left top / 1px var(--corner-length) no-repeat,
+        linear-gradient(rgba(79,60,43,.42), rgba(79,60,43,.42)) right top / var(--corner-length) 1px no-repeat,
+        linear-gradient(rgba(79,60,43,.42), rgba(79,60,43,.42)) right top / 1px var(--corner-length) no-repeat,
+        linear-gradient(rgba(79,60,43,.42), rgba(79,60,43,.42)) left bottom / var(--corner-length) 1px no-repeat,
+        linear-gradient(rgba(79,60,43,.42), rgba(79,60,43,.42)) left bottom / 1px var(--corner-length) no-repeat,
+        linear-gradient(rgba(79,60,43,.42), rgba(79,60,43,.42)) right bottom / var(--corner-length) 1px no-repeat,
+        linear-gradient(rgba(79,60,43,.42), rgba(79,60,43,.42)) right bottom / 1px var(--corner-length) no-repeat;
+      box-shadow:none;
+      font-size:32px;
+      font-weight:400;
+      letter-spacing:.1em;
+      line-height:1.5;
+      color:rgba(44,34,27,.96);
+      text-rendering:optimizeLegibility;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      opacity:.88;
+      transition:opacity 400ms ease, transform 280ms ease, border-color 400ms ease, color 280ms ease, --corner-length 280ms ease;
+      animation:choice-option-in 780ms ease-out;
+      cursor:pointer;
+    }
+    #weave .cinematic-choice:nth-child(2) { animation-delay:110ms; }
+    #weave .cinematic-choice::before {
+      content:"";
+      position:absolute;
+      top:15px;
+      left:50%;
+      width:6px;
+      height:6px;
+      border-radius:50%;
+      background:#A4563A;
+      opacity:.55;
+      transform:translateX(-50%);
+      transition:opacity 280ms ease;
+      z-index:1;
+      pointer-events:none;
+    }
+    #weave .cinematic-choice:hover,
+    #weave .cinematic-choice:focus-visible { --corner-length:18px; opacity:1; transform:translateY(-2px); color:rgba(42,32,25,.98); outline:none; }
+    #weave .cinematic-choice.is-selected { --corner-length:20px; opacity:1; transform:translateY(-2px); color:rgba(42,32,25,.98); border-color:rgba(113,72,45,.78); outline:none; }
+    #weave .cinematic-choice:hover::before,
+    #weave .cinematic-choice:focus-visible::before { opacity:.9; }
+    #weave .cinematic-choice.is-selected::before { opacity:1; }
+    #weave .cinematic-choice-stage.is-selecting .cinematic-choice:not(.is-selected) { opacity:0; }
+    @keyframes choice-stage-in { from { opacity:0; transform:translate(-50%, calc(-50% + 6px)); } to { opacity:1; transform:translate(-50%, -50%); } }
+    @keyframes choice-option-in { from { opacity:0; } to { opacity:.88; } }
+
+    /* Journey */
+    #journey .journey-paper { left:4%; top:10%; width:min(57vw,770px); height:76svh; object-fit:fill; opacity:0; animation:paper-in 1.2s ease forwards; }
+    @keyframes paper-in { to { opacity:1; } }
+    #journey .journey-copy { left:clamp(12%,16vw,21%); top:17%; height:61svh; font-size:clamp(18px,1.7vw,22px); line-height:1.75; opacity:0; transition:opacity .8s ease; }
+    #journey .journey-copy.visible { opacity:1; }
+    #journey .tap-water { position:absolute; inset:0; z-index:4; cursor:pointer; }
+
+    /* Weave */
+    .weave-paper { object-fit:fill; animation:drift 4.8s ease-in-out infinite alternate; pointer-events:auto; cursor:pointer; }
+    .weave-paper:focus-visible { outline:1px solid rgba(58,42,26,.4); outline-offset:5px; }
+    @keyframes drift { from { transform:translateY(-3px); } to { transform:translateY(3px); } }
+    #weave .paper-a { left:4%; top:13%; width:min(23vw,300px); height:67svh; animation-delay:-.6s; }
+    #weave .paper-b { left:25%; top:21%; width:min(19vw,250px); height:62svh; animation-delay:-2.5s; }
+    #weave .paper-c { left:42%; top:12%; width:min(19vw,250px); height:69svh; animation-delay:-4s; }
+    .weave-copy { font-size:clamp(15px,1.35vw,18px); line-height:1.55; top:18%; height:57svh; opacity:0; transition:opacity .45s ease; pointer-events:none; }
+    .weave-copy.shown { opacity:1; }
+    #weave .copy-a { left:10.5%; } #weave .copy-b { left:30%; } #weave .copy-c { left:47%; }
+    #weave .destinations { position:absolute; left:6%; bottom:6%; z-index:5; display:flex; gap:clamp(22px,5vw,65px); }
+    .destination { writing-mode:vertical-rl; font-size:clamp(19px,2vw,27px); text-shadow:var(--glow); }
+    .destination:hover { opacity:.62; }
+    .destination:focus-visible { outline:1px solid rgba(58,42,26,.45); outline-offset:6px; }
+
+    /* Result — a quiet arrival, not a static caption. */
+    #result .result-event-copy { position:absolute; left:5%; top:31%; z-index:3; display:flex; flex-direction:row-reverse; align-items:flex-start; gap:clamp(18px,2vw,30px); pointer-events:none; }
+    #result .result-line { writing-mode:vertical-rl; text-orientation:upright; white-space:nowrap; font-family:"Ma Shan Zheng"; font-size:clamp(22px,2.15vw,26px); line-height:1.45; letter-spacing:.12em; color:#3a2a1a; text-shadow:0 1px 3px rgba(255,240,200,.7); opacity:0; }
+    #result.is-playing .result-line-a { animation:result-copy-in 780ms 760ms ease-out forwards; }
+    #result.is-playing .result-line-b { animation:result-copy-in 780ms 1280ms ease-out forwards; }
+    @keyframes result-copy-in { from { opacity:0; } to { opacity:1; } }
+    #result .result-water-ripple { position:absolute; left:21%; top:57%; width:54vw; height:12vh; z-index:2; pointer-events:none; opacity:0; transform-origin:left center; }
+    #result .result-water-ripple::before, #result .result-water-ripple::after { content:""; position:absolute; left:0; width:100%; border-top:1px solid rgba(241,194,112,.34); border-radius:50%; }
+    #result .result-water-ripple::before { top:38%; height:48%; }
+    #result .result-water-ripple::after { top:56%; width:78%; height:32%; opacity:.55; }
+    #result.is-playing .result-water-ripple { animation:result-ripple-travel 2200ms 2100ms ease-out forwards; }
+    @keyframes result-ripple-travel { 0% { opacity:0; transform:translateX(-1vw) scaleX(.18); } 20% { opacity:.3; } 74% { opacity:.2; transform:translateX(5vw) scaleX(1); } 100% { opacity:0; transform:translateX(7vw) scaleX(1.1); } }
+    #result .result-pavilion-warmth { position:absolute; right:8%; top:42%; width:18vw; height:22vh; z-index:2; pointer-events:none; opacity:0; background:radial-gradient(ellipse at 55% 54%, rgba(255,204,122,.23), rgba(255,204,122,.07) 23%, transparent 66%); mix-blend-mode:screen; }
+    #result.is-playing .result-pavilion-warmth { animation:result-lamp-breathe 1080ms 2920ms ease-in-out forwards; }
+    @keyframes result-lamp-breathe { 0%, 100% { opacity:0; } 46% { opacity:.42; } }
+    /* ACT 2 — 渡江：环境先于叙事，物件只在各自的支线出现。 */
+    #result { transition:none; }
+    #result.is-text-out .result-event-copy { opacity:0; transition:opacity 700ms ease; }
+    #result.is-ui-out .result-water-ripple,
+    #result.is-ui-out .result-pavilion-warmth { opacity:0 !important; transition:opacity 500ms ease; }
+    #result .result-mist-bridge { position:absolute; inset:0; z-index:2; pointer-events:none; opacity:0; background:radial-gradient(ellipse at 58% 54%, rgba(255,231,189,.17), transparent 36%), linear-gradient(90deg, transparent 22%, rgba(255,234,202,.09) 54%, transparent 82%); filter:blur(10px); mix-blend-mode:screen; }
+    #result.is-camera-prep { animation:result-camera-prep 500ms ease-in-out forwards; }
+    #result.is-camera-prep .result-mist-bridge { animation:result-mist-rise 500ms ease-in-out forwards; }
+    #result.is-dissolving-out { animation:result-dissolve-out 1500ms ease-in-out forwards; }
+    #result.is-dissolving-out .result-mist-bridge { animation:result-mist-dissolve 1500ms ease-in-out forwards; }
+    @keyframes result-camera-prep { from { transform:scale(1); filter:brightness(1) blur(0); } to { transform:scale(.992); filter:brightness(1.04) blur(.65px); } }
+    @keyframes result-mist-rise { from { opacity:0; } to { opacity:.42; } }
+    @keyframes result-dissolve-out { from { opacity:1; transform:scale(.992); filter:brightness(1.04) blur(.65px); } to { opacity:0; transform:scale(.988); filter:brightness(1.035) blur(.8px); } }
+    @keyframes result-mist-dissolve { from { opacity:.42; } 48% { opacity:.5; } to { opacity:0; } }
+    #act2 { opacity:0; transition:none; }
+    #act2.is-visible { opacity:1; }
+    #act2.is-dissolving-in { animation:act2-dissolve-in 1500ms ease-in-out forwards; }
+    @keyframes act2-dissolve-in { from { opacity:0; transform:scale(1.012); } to { opacity:1; transform:scale(1); } }
+    #act2.is-river-dissolve-out { animation:river-to-pavilion-out 1600ms ease-in-out forwards; }
+    @keyframes river-to-pavilion-out { from { opacity:1; transform:scale(1); filter:brightness(1) blur(0); } to { opacity:0; transform:scale(1.01); filter:brightness(1.03) blur(.65px); } }
+    #pavilionArrival { opacity:0; transition:none; }
+    #pavilionArrival.is-dissolving-in { animation:pavilion-arrival-in 1600ms ease-in-out forwards; }
+    #pavilionArrival.is-visible { opacity:1; }
+    @keyframes pavilion-arrival-in { from { opacity:0; transform:scale(1.015); } to { opacity:1; transform:scale(1); } }
+    #pavilionArrival .pavilion-mist-bridge { position:absolute; inset:0; z-index:2; pointer-events:none; opacity:0; background:radial-gradient(ellipse at 58% 52%, rgba(255,232,194,.17), transparent 41%), linear-gradient(90deg, transparent 26%, rgba(255,230,195,.09) 55%, transparent 82%); filter:blur(11px); mix-blend-mode:screen; }
+    #pavilionArrival.is-dissolving-in .pavilion-mist-bridge { animation:pavilion-mist-arrival 1600ms ease-in-out both; }
+    @keyframes pavilion-mist-arrival { 0% { opacity:0; } 48% { opacity:.38; } 100% { opacity:0; } }
+    #pavilionArrival .pavilion-narrative { position:absolute; left:18%; top:20%; width:min(17vw,248px); height:42vh; z-index:4; display:flex; flex-direction:row-reverse; gap:clamp(25px,2.2vw,36px); pointer-events:none; opacity:0; transform:translateY(0); transition:opacity 900ms ease, transform 900ms ease; }
+    #pavilionArrival .pavilion-narrative.is-visible { opacity:1; }
+    #pavilionArrival .pavilion-narrative.is-visible.is-fading { opacity:0; transition-duration:1000ms; }
+    #pavilionArrival .pavilion-column { writing-mode:vertical-rl; text-orientation:upright; white-space:nowrap; font-family:"Ma Shan Zheng" !important; font-size:22px; font-weight:400; letter-spacing:.12em; line-height:1.65; color:rgba(51,42,34,.86); opacity:0; animation:pavilion-column-in 900ms ease-out forwards; animation-delay:var(--pavilion-delay,0ms); }
+    @keyframes pavilion-column-in { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+    /* Interaction 2 — a restrained disturbance in the lantern reflection, not a UI hotspot. */
+    #pavilionArrival .pavilion-water-affordance,
+    #pavilionArrival .pavilion-water-ripple,
+    #pavilionArrival .pavilion-lantern-answer { position:absolute; pointer-events:none; }
+    #pavilionArrival .pavilion-water-affordance {
+      left:77%; top:73%; width:clamp(108px,14vw,214px); height:clamp(44px,4vw,66px); z-index:3;
+      opacity:0; transform:translateY(1px); mix-blend-mode:screen;
+      background:linear-gradient(90deg, transparent 4%, rgba(255,219,163,.025) 31%, rgba(255,227,176,.11) 52%, rgba(255,219,163,.025) 74%, transparent 96%);
+      filter:blur(2px);
+    }
+    #pavilionArrival .pavilion-water-affordance.is-responding { animation:pavilion-reflection-answer 900ms ease-out forwards; }
+    @keyframes pavilion-reflection-answer { 0% { opacity:.62; transform:translateY(0) scaleX(1); } 28% { opacity:.7; transform:translateY(1px) scaleX(.92); } 100% { opacity:0; transform:translate(5px,1px) scaleX(1.08); } }
+    #pavilionArrival .pavilion-water-affordance.is-ending-settle { animation:pavilion-ending-reflection-settle 1200ms ease-in-out forwards; }
+    @keyframes pavilion-ending-reflection-settle { 0%,100% { opacity:0; transform:translateY(1px) scaleX(1); } 45% { opacity:.12; transform:translate(2px,0) scaleX(1.025); } }
+    #pavilionArrival .pavilion-water-ripple { left:77%; top:73%; width:clamp(112px,14vw,218px); height:clamp(48px,4.4vw,72px); z-index:3; opacity:0; transform:translate(-3%, 0) scale(.9); transform-origin:center; mix-blend-mode:screen; }
+    #pavilionArrival .pavilion-water-ripple::before { content:""; position:absolute; inset:30% 0 22%; border:1px solid rgba(245,211,157,.22); border-radius:50%; }
+    #pavilionArrival .pavilion-water-ripple.is-visible { animation:pavilion-water-response 1400ms ease-out forwards; }
+    @keyframes pavilion-water-response { 0% { opacity:0; transform:translate(-3%,0) scale(.9); } 22% { opacity:.18; } 100% { opacity:0; transform:translate(2%,1px) scale(1.35); } }
+    #pavilionArrival .pavilion-lantern-answer { right:8%; top:27%; width:18vw; height:24vh; z-index:3; opacity:0; background:radial-gradient(ellipse at 58% 52%, rgba(255,213,139,.115), rgba(255,213,139,.028) 28%, transparent 68%); mix-blend-mode:screen; filter:blur(5px); }
+    #pavilionArrival .pavilion-lantern-answer.is-visible { animation:pavilion-lantern-answer 1050ms ease-in-out forwards; }
+    @keyframes pavilion-lantern-answer { 0%,100% { opacity:0; } 48% { opacity:.42; } }
+    #pavilionArrival .pavilion-lantern-answer.is-ending-settle { animation:pavilion-ending-lantern-settle 1200ms ease-in-out forwards; }
+    @keyframes pavilion-ending-lantern-settle { 0%,100% { opacity:0; } 45% { opacity:.16; } }
+    #pavilionArrival .pavilion-firefly-guide { position:absolute; left:64%; top:36%; z-index:5; width:6px; height:6px; opacity:0; pointer-events:none; transform:translate3d(0,0,0); transition:opacity 550ms ease; will-change:transform,opacity; }
+    #pavilionArrival .pavilion-firefly-hit-target { position:absolute; left:50%; top:50%; z-index:2; width:64px; height:64px; margin:0; padding:0; border:0; outline:0; box-shadow:none; background:transparent; opacity:0; pointer-events:none; touch-action:manipulation; transform:translate(-50%,-50%); }
+    #pavilionArrival .pavilion-firefly-hit-target.is-enabled { pointer-events:auto; cursor:pointer; }
+    #pavilionArrival .pavilion-reflection-hint { position:absolute; left:58%; top:34%; z-index:4; writing-mode:vertical-rl; text-orientation:upright; font-family:"Ma Shan Zheng" !important; font-size:clamp(18px,1.2vw,22px); letter-spacing:.16em; line-height:1.55; color:rgba(58,47,39,.78); opacity:0; pointer-events:none; transition:opacity 700ms ease; }
+    #pavilionArrival .pavilion-reflection-hint.is-visible { opacity:1; }
+    /* Interaction 2 — a single, deliberately readable firefly outside the pavilion. */
+    #pavilionArrival .pavilion-firefly { position:absolute; inset:0; width:6px; height:6px; pointer-events:none; }
+    #pavilionArrival .pavilion-firefly::before { content:""; position:absolute; left:-1px; top:1px; width:2px; height:3.5px; border-radius:50%; background:rgba(50,39,27,.58); }
+    #pavilionArrival .pavilion-firefly::after { content:""; position:absolute; left:-23px; top:1px; width:23px; height:3px; border-radius:50%; opacity:0; pointer-events:none; background:linear-gradient(90deg, transparent, rgba(255,225,150,.2)); filter:blur(.65px); }
+    #pavilionArrival .pavilion-firefly-core { position:absolute; right:0; top:0; display:block; width:5.5px; height:5.5px; border-radius:50%; background:#FFF1C2; box-shadow:0 0 5px rgba(255,225,150,.85), 0 0 11px rgba(255,225,150,.55), 0 0 20px rgba(242,184,78,.25); animation:pavilion-firefly-breathe 3900ms ease-in-out infinite; }
+    #pavilionArrival .pavilion-firefly-guide.is-intro { opacity:.98; animation:pavilion-firefly-introduction 3700ms 550ms cubic-bezier(.42,0,.22,1) forwards; }
+    #pavilionArrival .pavilion-firefly-guide.is-intro .pavilion-firefly::after { animation:pavilion-firefly-trace 3700ms 550ms linear forwards; }
+    #pavilionArrival .pavilion-firefly-guide.is-waiting { opacity:.98; pointer-events:auto; animation:pavilion-firefly-wait 3900ms ease-in-out infinite; }
+    #pavilionArrival .pavilion-firefly-guide.is-hovered .pavilion-firefly-core { filter:brightness(1.055); }
+    #pavilionArrival .pavilion-firefly-guide.is-approaching { opacity:1; animation:pavilion-firefly-approach 850ms ease-in-out forwards; }
+    #pavilionArrival .pavilion-firefly-guide.is-approaching .pavilion-firefly-core { animation:pavilion-firefly-merge-brighten 190ms ease-in-out 660ms both; }
+    #pavilionArrival .pavilion-firefly-guide.is-fading { animation:pavilion-firefly-merge 420ms ease-in forwards; }
+    @keyframes pavilion-firefly-introduction {
+      0% { transform:translate3d(0,0,0); filter:brightness(.98); }
+      12% { transform:translate3d(11px,-4px,0); filter:brightness(1.08); }
+      24.3% { transform:translate3d(22px,-10px,0); filter:brightness(1.14); }
+      37.8% { transform:translate3d(22px,-10px,0); filter:brightness(1.04); }
+      49% { transform:translate3d(32px,-3px,0); filter:brightness(1.1); }
+      62.1% { transform:translate3d(41px,0,0); filter:brightness(1.13); }
+      78.4% { transform:translate3d(41px,0,0); filter:brightness(1.03); }
+      89% { transform:translate3d(48px,-3px,0); filter:brightness(1.09); }
+      100% { transform:translate3d(54px,-4px,0); filter:brightness(1.05); }
+    }
+    @keyframes pavilion-firefly-trace {
+      0%,2%,24%,37%,62%,78%,100% { opacity:0; }
+      12%,23% { opacity:.2; }
+      49%,61% { opacity:.18; }
+      88%,97% { opacity:.16; }
+    }
+    @keyframes pavilion-firefly-wait {
+      0%,100% { transform:translate3d(54px,-4px,0); }
+      26% { transform:translate3d(57px,-6px,0); }
+      52% { transform:translate3d(52px,-2px,0); }
+      78% { transform:translate3d(56px,-5px,0); }
+    }
+    @keyframes pavilion-firefly-approach { from { transform:translate3d(54px,-4px,0); } to { transform:translate3d(106px,-13px,0); } }
+    @keyframes pavilion-firefly-merge-brighten { 0%,100% { filter:brightness(1); } 52% { filter:brightness(1.25); } }
+    @keyframes pavilion-firefly-merge { from { opacity:1; transform:translate3d(106px,-13px,0) scale(1); } to { opacity:0; transform:translate3d(106px,-13px,0) scale(.65); } }
+    @keyframes pavilion-firefly-breathe { 0%,100% { opacity:.72; } 24% { opacity:.98; } 49% { opacity:.78; } 76% { opacity:.93; } }
+    /* Ending — the existing shot resolves into one restrained inscription. */
+    #pavilionArrival .pavilion-ending-layer { position:absolute; inset:0; z-index:auto; pointer-events:none; }
+    #pavilionArrival .pavilion-ending-title {
+      position:absolute; left:31%; top:27%; z-index:6; writing-mode:vertical-rl; text-orientation:upright;
+      font-family:"Ma Shan Zheng" !important; font-size:clamp(30px,2.5vw,42px); font-weight:400;
+      letter-spacing:.08em; line-height:1; color:rgba(51,42,34,.8); opacity:0; pointer-events:none;
+      transition:opacity 1300ms ease;
+    }
+    #pavilionArrival .pavilion-ending-title.is-visible { opacity:1; }
+    body.is-pavilion-ending .audio-toggle { opacity:0; visibility:hidden; pointer-events:none; }
+    #act2::after { background:rgba(77,47,21,.025); }
+    #act2 .fireflies { opacity:.14; }
+    #act2 .act2-boat-mist { position:absolute; left:49%; top:51%; width:22vw; height:25vh; z-index:2; pointer-events:none; opacity:0; background:radial-gradient(ellipse at 52% 56%, rgba(249,221,175,.22), rgba(249,221,175,.08) 34%, transparent 70%); filter:blur(9px); mix-blend-mode:screen; }
+    #act2.is-dissolving-in .act2-boat-mist { animation:act2-boat-mist 2100ms ease-out both; }
+    @keyframes act2-boat-mist { 0% { opacity:0; } 28% { opacity:.34; } 72% { opacity:.2; } 100% { opacity:0; } }
+    #act2 .act2-cinematic-shimmer { position:absolute; inset:0; z-index:1; pointer-events:none; opacity:0; mix-blend-mode:screen; background:linear-gradient(105deg, transparent 30%, rgba(255,215,145,.09) 48%, transparent 68%); transform:translateX(-7%); }
+    #act2.is-drifting .act2-cinematic-shimmer { animation:act2-cinematic-shimmer 3200ms ease-in-out both; }
+    #act2.is-drifting .fireflies { animation:act2-firefly-drift 3200ms ease-in-out both; }
+    @keyframes act2-cinematic-shimmer { 0% { opacity:0; transform:translateX(-7%); } 18% { opacity:.18; } 78% { opacity:.12; } 100% { opacity:0; transform:translateX(7%); } }
+    @keyframes act2-firefly-drift { 0%,100% { transform:translateX(0); } 50% { transform:translateX(3px); } }
+    #act2 .act2-boatman {
+      position:absolute; left:55.5%; top:55%; width:clamp(74px,7.2vw,122px); height:auto;
+      z-index:2; opacity:0; pointer-events:none; mix-blend-mode:multiply;
+      transform:translateY(4px); transition:opacity 920ms ease, transform 920ms ease;
+    }
+    #act2.is-boatman-visible .act2-boatman { opacity:.78; transform:translateY(0); }
+    #act2 .act2-narrative {
+      position:absolute; left:34%; top:21%; width:6vw; max-width:96px; height:42vh; z-index:4;
+      display:flex; flex-direction:row-reverse; gap:38px; pointer-events:none;
+      opacity:0; transform:translateY(0); transition:opacity 900ms ease, transform 900ms ease;
+    }
+    #act2 .act2-narrative.is-visible { opacity:1; }
+    #act2 .act2-narrative.is-visible.is-fading { opacity:0; transform:translateY(-2px); transition-duration:1000ms; }
+    #act2 .act2-column {
+      writing-mode:vertical-rl; text-orientation:upright; white-space:nowrap;
+      font-family:"Ma Shan Zheng" !important; font-size:22px; font-weight:400;
+      letter-spacing:.12em; line-height:1.65; color:rgba(51,42,34,.86); opacity:0;
+      animation:act2-column-in 900ms ease-out forwards; animation-delay:var(--act2-delay,0ms);
+    }
+    #act2 .act2-column:nth-child(2) { margin-top:22px; }
+    @keyframes act2-column-in { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+    /* Interaction 1 — transparent canvas compositing over the original bg_farewell river. */
+    #act2 .river-paper-canvas { position:absolute; inset:0; z-index:4; width:100%; height:100%; background:transparent; pointer-events:none; }
+    #act2 .river-paper-hit-target { position:absolute; z-index:5; margin:0; padding:0; border:0; border-radius:0; outline:0; box-shadow:none; background:transparent; opacity:0; pointer-events:none; touch-action:manipulation; }
+    #act2 .river-paper-hit-target.is-enabled { opacity:1; pointer-events:auto; cursor:pointer; }
+    #act2 .river-paper-hit-target.is-debug { background:rgba(255,0,0,.25); outline:2px solid red; }
+    #act2 .act2-object { position:absolute; z-index:3; pointer-events:none; opacity:0; }
+    #act2 .act2-object.is-visible { opacity:1; }
+    #act2 .act2-net-paper {
+      left:19%; top:48%; width:clamp(148px,16vw,238px); height:auto; mix-blend-mode:multiply;
+      transform:rotate(-3deg); transition:opacity 920ms ease; filter:contrast(.9) saturate(.86);
+    }
+    #act2 .act2-net-paper.is-visible { animation:act2-net-arrive 900ms ease-out forwards, act2-net-drift 5200ms 1000ms ease-in-out infinite; }
+    @keyframes act2-net-arrive { from { opacity:0; } to { opacity:.85; } }
+    @keyframes act2-net-drift { 0%,100% { transform:rotate(-3deg) translateY(0); } 50% { transform:rotate(-2.6deg) translateY(-3px); } }
+    #act2 .act2-water-paper {
+      left:22%; top:57%; width:clamp(170px,18vw,278px); height:auto; mix-blend-mode:multiply;
+      transform:rotate(-1deg); filter:contrast(.88) saturate(.84); transition:opacity 920ms ease;
+    }
+    #act2 .act2-water-paper.is-visible { animation:act2-water-arrive 900ms ease-out forwards, act2-water-drift 7600ms 900ms ease-in-out infinite; }
+    #act2 .act2-water-paper.is-sailing { animation:act2-water-sail 2600ms ease-in-out forwards; }
+    @keyframes act2-water-arrive { from { opacity:0; } to { opacity:.84; } }
+    @keyframes act2-water-drift { 0%,100% { transform:rotate(-1deg) translate(0,0); } 50% { transform:rotate(-.4deg) translate(16px,-3px); } }
+    @keyframes act2-water-sail { from { opacity:.84; transform:rotate(-1deg) translate(0,0); } to { opacity:0; transform:rotate(.4deg) translate(48px,-2px); } }
+    #act2 .act2-ripple {
+      left:20%; top:61%; width:clamp(170px,20vw,310px); height:auto; mix-blend-mode:multiply;
+      opacity:0; transition:opacity 700ms ease; filter:sepia(.3) saturate(.72);
+    }
+    #act2 .act2-ripple.is-visible { animation:act2-ripple 1700ms ease-out forwards; }
+    @keyframes act2-ripple { 0% { opacity:0; transform:scale(.35); } 22% { opacity:.16; } 100% { opacity:0; transform:scale(1); } }
+    #act2 .act2-choice-stage {
+      position:absolute; left:33%; top:45%; z-index:5; display:flex; gap:clamp(44px,4vw,66px);
+      opacity:0; pointer-events:none; transform:translateY(5px); transition:opacity 760ms ease, transform 760ms ease;
+    }
+    #act2 .act2-choice-stage.is-visible { opacity:1; pointer-events:auto; transform:translateY(0); }
+    #act2 .act2-choice {
+      position:relative; width:clamp(66px,5.8vw,78px); min-height:178px; padding:18px 10px 14px;
+      writing-mode:vertical-rl; text-orientation:upright; font-family:"Ma Shan Zheng" !important;
+      font-size:clamp(25px,2.15vw,30px); font-weight:500; letter-spacing:.12em; line-height:1.5;
+      color:rgba(48,38,30,.92); border:1px solid rgba(76,59,44,.52); border-radius:0;
+      background:rgba(226,205,168,.09); opacity:.84; transition:opacity 280ms ease,transform 280ms ease,border-color 280ms ease,background 280ms ease;
+    }
+    #act2 .act2-choice::before { content:""; position:absolute; top:11px; left:50%; width:6px; height:6px; border-radius:50%; background:#A85235; opacity:.72; transform:translateX(-50%); }
+    #act2 .act2-choice::after { content:""; position:absolute; inset:4px; border:1px solid rgba(76,59,44,.26); pointer-events:none; }
+    #act2 .act2-choice:hover, #act2 .act2-choice:focus-visible { opacity:1; transform:translateY(-2px); border-color:rgba(104,70,46,.8); background:rgba(226,205,168,.15); outline:none; }
+    #act2 .act2-choice.is-selected { opacity:1; border-color:rgba(150,82,45,.92); }
+    #act2 .act2-choice-stage.is-resolving .act2-choice:not(.is-selected) { opacity:.18; }
+    #act2 .act2-paper-boat {
+      position:absolute; left:40%; top:43%; width:clamp(68px,6vw,94px); height:auto; z-index:5;
+      padding:0; opacity:0; pointer-events:none; mix-blend-mode:multiply; transform:translateY(6px);
+      transition:opacity 900ms ease, transform 900ms ease; background:transparent;
+    }
+    #act2 .act2-paper-boat.is-visible { opacity:.9; pointer-events:auto; transform:translateY(0); animation:act2-boat-slip 5100ms 1000ms ease-in-out infinite; }
+    @keyframes act2-boat-slip { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-3px); } }
+    #act2 .act2-paper-boat img { display:block; width:100%; height:auto; mix-blend-mode:multiply; }
+    #act2 .act2-paper-label { position:absolute; left:calc(40% + clamp(78px,7vw,105px)); top:48%; z-index:5; writing-mode:vertical-rl; text-orientation:upright; font-family:"Ma Shan Zheng" !important; font-size:21px; letter-spacing:.12em; color:rgba(51,42,34,.84); opacity:0; pointer-events:none; transition:opacity 700ms ease; }
+    #act2 .act2-paper-label.is-visible { opacity:1; }
+    #act2 .act2-next-hook { position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity 600ms ease; }
+    #act2.is-next-hook .act2-next-hook { opacity:1; }
+    @media (max-width:700px) {
+      /* The current composer uses .menu-* (not the retired .topics markup).
+         Keep all five semantic choice targets inside the portrait viewport. */
+      #compose .menu-container {
+        left:4%; top:48%; width:92vw;
+        transform:translateY(-50%);
+        justify-content:space-between;
+        gap:0;
+      }
+      #compose .menu-item { width:20%; min-width:0; }
+      #compose .menu-char { font-size:clamp(34px,10vw,44px); }
+      #compose .menu-desc {
+        margin-top:14px;
+        height:112px;
+        font-size:clamp(10px,3vw,12px);
+        line-height:1.5;
+      }
+      #act2 .act2-boatman { left:54%; top:57%; width:18vw; }
+      #act2 .act2-narrative { left:17%; top:19%; width:49vw; height:47vh; gap:18px; }
+      #act2 .act2-column { font-size:22px; }
+      #act2 .act2-net-paper { left:14%; top:51%; width:32vw; }
+      #act2 .act2-water-paper { left:16%; top:59%; width:38vw; }
+      #act2 .act2-choice-stage { left:25%; top:43%; gap:28px; }
+      #act2 .act2-choice { width:64px; min-height:170px; font-size:26px; }
+      #act2 .act2-paper-boat { left:35%; top:44%; width:16vw; }
+      #act2 .act2-paper-label { left:53%; top:48%; }
+      #pavilionArrival .pavilion-narrative { left:17%; top:19%; width:49vw; height:47vh; gap:18px; }
+      #pavilionArrival .pavilion-column { font-size:22px; }
+      #pavilionArrival .pavilion-water-affordance,
+      #pavilionArrival .pavilion-water-ripple { left:73%; top:71%; }
+      #pavilionArrival .pavilion-firefly-guide { left:63%; top:35%; }
+      #pavilionArrival .pavilion-firefly-hit-target { width:64px; height:64px; }
+      #pavilionArrival .pavilion-reflection-hint { left:53%; top:33%; font-size:clamp(17px,4.8vw,20px); }
+      #pavilionArrival .pavilion-lantern-answer { right:2%; top:27%; width:28vw; height:25vh; }
+      #pavilionArrival .pavilion-ending-title { left:28%; top:27%; font-size:clamp(30px,7vw,38px); }
+    }
+    @media (max-width:700px) {
+      #landing .opening-copy { left:5%; top:18%; width:20vw; max-width:280px; height:60vh; font-size:20px; }
+      #landing::before { right:8%; bottom:12%; font-size:54px; }
+      #landing::after { right:3.8%; bottom:12%; font-size:15px; }
+      #compose .topics { left:0; right:0; top:45%; width:88vw; margin:0 auto; gap:0; } #compose .topic { flex-basis:52px; width:52px; } #compose .topic-title { font-size:40px; } #compose .topic-note { font-size:13px; width:38px; }
+      #journey .journey-paper { left:-19%; width:119vw; top:13%; height:68svh; }
+      #journey .journey-copy { left:26%; top:20%; height:53svh; font-size:18px; }
+      #journey .journey-prop { left:7%; top:18%; width:31vw; height:18vh; }
+      #journey .journey-prop-caption { top:14%; right:18%; font-size:12px; }
+      #journey .journey-story { left:42%; top:16%; width:46vw; height:57vh; font-size:16px; line-height:2.35; }
+      #journey .narrative-layer { left:19%; top:18vh; width:54vw; height:48vh; }
+      #journey .narrative-beat { gap:18px; }
+      #journey .vertical-column { font-size:22px; letter-spacing:.12em; }
+      #weave .cinematic-choice-stage { left:49%; top:45%; gap:clamp(28px,8vw,48px); }
+      #weave .cinematic-choice { width:72px; height:240px; font-size:36px; letter-spacing:.14em; }
+      #weave .paper-a { left:-5%; width:44vw; } #weave .paper-b { left:28%; width:34vw; top:23%; } #weave .paper-c { left:57%; width:38vw; }
+      #weave .copy-a { left:10%; } #weave .copy-b { left:37%; } #weave .copy-c { left:66%; }
+      #weave .destinations { left:8%; gap:26px; bottom:5%; } .destination { font-size:20px; }
+    }
+    #landing::before, #landing::after { content:none !important; }
+    .opening-text-container {
+      position: absolute !important;
+      left: 45% !important;
+      top: 20% !important;
+      transform: none !important;
+      width: 22vw !important;
+      max-width: 300px !important;
+      height: 75vh !important;
+      overflow: visible !important;
+      writing-mode: vertical-rl !important;
+      text-orientation: upright !important;
+      font-family: "Ma Shan Zheng" !important;
+      color: #3a2a1a !important;
+      text-shadow: 0 1px 3px rgba(255, 240, 200, 0.7) !important;
+      font-size: clamp(18px, 1.6vw, 22px) !important;
+      line-height: 3 !important;
+      letter-spacing: 0.08em !important;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      z-index: 3;
+    }
+    .opening-text-container p { margin: 0 !important; }
+    .landing-title {
+      position: absolute !important;
+      right: 12% !important;
+      bottom: 15% !important;
+      writing-mode: vertical-rl !important;
+      font-family: "Ma Shan Zheng" !important;
+      color: #fff8e7 !important;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55), 0 0 16px rgba(255, 240, 200, 0.75) !important;
+      font-size: clamp(40px, 5vw, 70px) !important;
+      z-index: 3;
+    }
+    .landing-hint {
+      position: absolute !important;
+      right: 8% !important;
+      bottom: 12% !important;
+      writing-mode: vertical-rl !important;
+      font-family: "Ma Shan Zheng", serif !important;
+      color: #3a2a1a !important;
+      text-shadow: 0 1px 3px rgba(255, 240, 200, 0.7) !important;
+      font-size: 16px !important;
+      z-index: 3;
+      display: block !important;
+      opacity: 0 !important;
+      transition: opacity 1s ease;
+    }
+    .landing-hint.is-visible { opacity: 1 !important; }
+    /*
+      Container-safe cinematic system: every critical painting is an eager,
+      static local image in the initial DOM. Camera motion stays on that image,
+      below all narrative, paper, firefly and hit-target layers.
+    */
+    .scene-art {
+      position:absolute;
+      top:0;
+      right:0;
+      bottom:0;
+      left:0;
+      width:100%;
+      height:100%;
+      max-width:none;
+      display:block;
+      object-fit:cover;
+      object-position:center;
+      z-index:0;
+      pointer-events:none;
+      transform:scale(1.012);
+      transform-origin:center;
+      will-change:transform;
+    }
+    @media (max-width:600px) and (orientation:portrait) {
+      #landing > .scene-art,
+      #compose > .scene-art,
+      #journey > .scene-art,
+      #weave > .scene-art { object-position:35% 50%; }
+      #act2 > .scene-art { object-position:50% 50%; }
+      #pavilionArrival > .scene-art { object-position:82% 50%; }
+    }
+
+    /* Camera arc: memory breathes, the journey advances, choices settle, ending rests. */
+    #landing.active > .scene-art { animation:camera-breathe var(--camera-breathe) var(--motion-ease) infinite alternate; }
+    #compose.active > .scene-art { animation:camera-choice-still var(--camera-still) var(--motion-ease) infinite alternate; }
+    #journey.active > .scene-art { animation:camera-journey-drift var(--camera-drift) var(--motion-ease) infinite alternate; }
+    #weave.active > .scene-art { animation:camera-choice-still var(--camera-still) var(--motion-ease) infinite alternate; }
+    #act2.is-visible > .scene-art { animation:camera-river-push 15s var(--motion-ease) infinite alternate; }
+    #pavilionArrival.is-visible > .scene-art { animation:camera-pavilion-still var(--camera-still) var(--motion-ease) infinite alternate; }
+    @keyframes camera-breathe {
+      from { transform:scale(1.012) translate3d(-2px,1px,0); }
+      to { transform:scale(1.018) translate3d(3px,-2px,0); }
+    }
+    @keyframes camera-choice-still {
+      from { transform:scale(1.008) translate3d(0,0,0); }
+      to { transform:scale(1.011) translate3d(1px,-1px,0); }
+    }
+    @keyframes camera-journey-drift {
+      from { transform:scale(1.01) translate3d(-3px,1px,0); }
+      to { transform:scale(1.016) translate3d(3px,-2px,0); }
+    }
+    @keyframes camera-river-push {
+      from { transform:scale(1.006) translate3d(-2px,1px,0); }
+      to { transform:scale(1.016) translate3d(4px,-3px,0); }
+    }
+    @keyframes camera-pavilion-still {
+      from { transform:scale(1.006) translate3d(0,0,0); }
+      to { transform:scale(1.009) translate3d(1px,-1px,0); }
+    }
+
+    /* Narrative and interactions deliberately quiet the lens; the world remains present but does not compete. */
+    #journey.is-cinematic-text-focus > .scene-art { animation:camera-choice-still 22s var(--motion-ease) infinite alternate; }
+    #act2.is-cinematic-text-focus > .scene-art { animation:camera-choice-still 22s var(--motion-ease) infinite alternate; }
+    #pavilionArrival.is-cinematic-text-focus > .scene-art { animation:camera-choice-still 24s var(--motion-ease) infinite alternate; }
+    #act2.is-cinematic-interaction-hold > .scene-art {
+      animation:none;
+      transform:scale(1) translate3d(0,0,0);
+    }
+    #pavilionArrival.is-cinematic-interaction-hold > .scene-art,
+    #pavilionArrival.is-cinematic-ending-still > .scene-art {
+      animation:none;
+      transform:scale(1.006) translate3d(0,0,0);
+    }
+
+    /* One shared, nearly imperceptible mist field unifies the generated plates without adding new objects. */
+    #landing.active::after,
+    #compose.active::after,
+    #journey.active::after,
+    #weave.active::after,
+    #act2.is-visible::after,
+    #pavilionArrival.is-visible::after {
+      content:"" !important;
+      background:
+        radial-gradient(ellipse at 26% 66%, rgba(245,227,196,.055), transparent 42%),
+        radial-gradient(ellipse at 77% 38%, rgba(255,220,164,.04), transparent 39%),
+        rgba(93,62,31,.022);
+      opacity:.7;
+      animation:atmosphere-drift var(--atmosphere-drift) var(--motion-ease) infinite alternate;
+      will-change:transform, opacity;
+    }
+    #act2.is-cinematic-interaction-hold::after,
+    #pavilionArrival.is-cinematic-interaction-hold::after,
+    #pavilionArrival.is-cinematic-ending-still::after { animation:none; opacity:.48; }
+    @keyframes atmosphere-drift {
+      from { transform:translate3d(-2px,1px,0); opacity:.58; }
+      to { transform:translate3d(3px,-2px,0); opacity:.76; }
+    }
+
+    /* Existing light in the river is allowed to breathe only during unoccupied clean frames. */
+    #act2.is-visible:not(.is-drifting):not(.is-cinematic-text-focus):not(.is-cinematic-interaction-hold) .act2-cinematic-shimmer {
+      animation:river-light-breathe var(--light-breathe) var(--motion-ease) infinite alternate;
+    }
+    @keyframes river-light-breathe {
+      from { opacity:.035; transform:translate3d(-2px,0,0); }
+      to { opacity:.095; transform:translate3d(3px,1px,0); }
+    }
+    #pavilionArrival.is-visible:not(.is-cinematic-interaction-hold):not(.is-cinematic-ending-still)::after {
+      background:
+        radial-gradient(ellipse at 79% 53%, rgba(255,219,157,.06), transparent 22%),
+        radial-gradient(ellipse at 26% 66%, rgba(245,227,196,.045), transparent 42%),
+        rgba(93,62,31,.018);
+    }
+
+    /* Ink-like reveals retain the approved type and layout while removing the abrupt DOM feeling. */
+    #journey .vertical-column,
+    #act2 .act2-column,
+    #pavilionArrival .pavilion-column {
+      animation-duration:var(--text-reveal);
+      animation-timing-function:var(--motion-ease);
+      will-change:transform, opacity, filter;
+    }
+    @keyframes narrative-column-in {
+      from { opacity:0; transform:translateY(3px); filter:blur(1.25px); }
+      to { opacity:1; transform:translateY(0); filter:blur(0); }
+    }
+    @keyframes act2-column-in {
+      from { opacity:0; transform:translateY(3px); filter:blur(1.25px); }
+      to { opacity:1; transform:translateY(0); filter:blur(0); }
+    }
+    @keyframes pavilion-column-in {
+      from { opacity:0; transform:translateY(3px); filter:blur(1.25px); }
+      to { opacity:1; transform:translateY(0); filter:blur(0); }
+    }
+
+    @media (max-width:700px) {
+      #landing.active > .scene-art { animation:camera-breathe-mobile 16s var(--motion-ease) infinite alternate; }
+      #journey.active > .scene-art,
+      #act2.is-visible > .scene-art { animation:camera-mobile-drift 18s var(--motion-ease) infinite alternate; }
+      #pavilionArrival.is-visible > .scene-art { animation:camera-choice-still 22s var(--motion-ease) infinite alternate; }
+      @keyframes camera-breathe-mobile {
+        from { transform:scale(1.006) translate3d(-1px,1px,0); }
+        to { transform:scale(1.011) translate3d(1px,-1px,0); }
+      }
+      @keyframes camera-mobile-drift {
+        from { transform:scale(1.012) translate3d(-1px,0,0); }
+        to { transform:scale(1.016) translate3d(2px,-1px,0); }
+      }
+    }
+    #act2.is-visible.is-cinematic-interaction-hold > .scene-art {
+      animation:none !important;
+      transform:scale(1) translate3d(0,0,0) !important;
+    }
+    #pavilionArrival.is-visible.is-cinematic-interaction-hold > .scene-art,
+    #pavilionArrival.is-visible.is-cinematic-ending-still > .scene-art {
+      animation:none !important;
+      transform:scale(1.006) translate3d(0,0,0) !important;
+    }
+    @media (prefers-reduced-motion:reduce) {
+      .scene-art,
+      .scene::after,
+      #act2 .act2-cinematic-shimmer,
+      #act2 .fireflies,
+      #pavilionArrival .pavilion-firefly-core { animation:none !important; }
+      .scene-art { transform:scale(1.004) !important; }
+    }
+  </style>
+</head>
+<body>
+  <main aria-label="尺素入江">
+    <section id="landing" class="scene warm active" aria-label="开场"><img class="scene-art" src="./assets/bg_warm.png" alt="" aria-hidden="true" /><img class="fireflies" src="assets/fireflies.png" alt="" /><div id="openingText" class="opening-text-container"></div><div class="landing-title">尺素入江</div><div class="landing-hint">轻触继续</div></section>
+    <section id="compose" class="scene warm compose-screen" aria-label="选题"><img class="scene-art" src="./assets/bg_warm.png" alt="" aria-hidden="true" /><img class="fireflies" src="assets/fireflies.png" alt="" /><div class="top-title-group"><div class="title-main">今日 · 立秋</div><div class="title-sub">秋雨湿阶。你的信，写给故园与归途。</div><div class="title-section">从岸边，拣一张题签</div><div class="title-sub-small">老人把竹筏停在芦苇边。哪一句顺眼，就替他拣哪一句。</div></div><div class="menu-container"><div class="menu-item" data-choice="去"><div class="menu-char">去</div><div class="menu-desc">想去个一直没去的地方</div></div><div class="menu-item" data-choice="做"><div class="menu-char">做</div><div class="menu-desc">想把拖很久的事做完</div></div><div class="menu-item" data-choice="说"><div class="menu-char">说</div><div class="menu-desc">想跟一个人说句话</div></div><div class="menu-item" data-choice="放"><div class="menu-char">放</div><div class="menu-desc">想把一件事放下</div></div><div class="menu-item" data-choice="写"><div class="menu-char">写</div><div class="menu-desc">自己写一句</div></div></div></section>
+    <section id="journey" class="scene warm" aria-label="心路历程"><img class="scene-art" src="./assets/bg_warm.png" alt="" aria-hidden="true" /><img class="fireflies" src="assets/fireflies.png" alt="" /><div class="narrative-layer"><div class="narrative-beat" id="journeyBeat" aria-live="polite"></div></div></section>
+    <section id="weave" class="scene warm" aria-label="去处选择"><img class="scene-art" src="./assets/bg_warm.png" alt="" aria-hidden="true" /><img class="fireflies" src="assets/fireflies.png" alt="" /><div class="cinematic-choice-stage choice-group" aria-label="择一处"><button class="cinematic-choice" data-destination="net">夹进旧网</button><button class="cinematic-choice" data-destination="water">放回水面</button></div></section>
+    <section id="act2" class="scene" aria-label="入江">
+      <img class="scene-art" src="./assets/bg_farewell.png" alt="" aria-hidden="true" />
+      <img class="fireflies" src="assets/fireflies.png" alt="" />
+      <div class="act2-cinematic-shimmer" aria-hidden="true"></div>
+      <div class="act2-boat-mist" aria-hidden="true"></div>
+      <img class="act2-boatman" src="assets/boatman.png" alt="" />
+      <img class="act2-object act2-net-paper" src="assets/paper_net.png" alt="" />
+      <img class="act2-object act2-water-paper" src="assets/paper_light.png" alt="" />
+      <img class="act2-object act2-ripple" src="assets/ripple.png" alt="" />
+      <div class="act2-narrative" id="act2Narrative" aria-live="polite"></div>
+      <div class="act2-choice-stage" id="act2ChoiceStage" aria-label="择一处">
+        <button class="act2-choice" data-net-action="retrieve">捞起来</button>
+        <button class="act2-choice" data-net-action="release">松开手</button>
+      </div>
+      <button class="act2-paper-boat" id="act2PaperBoat" aria-label="还认得字么"><img src="assets/paper_boat.png" alt="" /></button>
+      <div class="act2-paper-label" id="act2PaperLabel">还认得字么</div>
+      <div class="act2-next-hook" aria-live="polite"></div>
+    </section>
+    <section id="pavilionArrival" class="scene" aria-label="亭前">
+      <img class="scene-art" src="./assets/bg_pavilion_close.png" alt="" aria-hidden="true" />
+      <div class="pavilion-mist-bridge" aria-hidden="true"></div>
+      <div class="pavilion-firefly-guide" id="pavilionFireflyGuide">
+        <div class="pavilion-firefly" id="pavilionFirefly" aria-hidden="true"><span class="pavilion-firefly-core"></span></div>
+        <button class="pavilion-firefly-hit-target" id="pavilionReflectionHitTarget" type="button" aria-label="轻触萤火"></button>
+      </div>
+      <div class="pavilion-water-affordance" id="pavilionWaterAffordance" aria-hidden="true"></div>
+      <div class="pavilion-water-ripple" id="pavilionWaterRipple" aria-hidden="true"></div>
+      <div class="pavilion-lantern-answer" id="pavilionLanternAnswer" aria-hidden="true"></div>
+      <div class="pavilion-reflection-hint" id="pavilionReflectionHint" aria-live="polite"></div>
+      <div class="pavilion-narrative" id="pavilionNarrative" aria-live="polite"></div>
+      <div class="pavilion-ending-layer" id="pavilionEnding" aria-hidden="true">
+        <div class="pavilion-ending-title" id="pavilionEndingTitle">尺素入江</div>
+      </div>
+    </section>
+  </main>
+  <button class="audio-toggle" id="audioToggle" type="button" aria-label="静音" aria-pressed="false">声</button>
+  <script src="audio-data.js"></script>
+  <script>
+    // Temporary Interaction 1 path verification: default gameplay is unaffected.
+    const interaction1Debug = new URLSearchParams(window.location.search).has('interaction1-debug');
+    function clearElement(element) {
+      while (element && element.firstChild) element.removeChild(element.firstChild);
+    }
+    function removeElement(element) {
+      if (element && element.parentNode) element.parentNode.removeChild(element);
+    }
+    function mapToObject(map, projector) {
+      const output = {};
+      map.forEach((value, key) => {
+        output[key] = projector ? projector(value, key) : value;
+      });
+      return output;
+    }
+    const AudioController = (() => {
+      const tracks = {
+        river: { gain:.135, loop:true },
+        bamboo: { gain:.05, loop:true },
+        boat: { gain:.095, max:1 },
+        paper: { gain:.13, max:1 },
+        firefly: { gain:.045, max:1 },
+        cup: { gain:.15, max:1 }
+      };
+      const sceneMixes = {
+        landing: { river:.11, bamboo:.05 },
+        compose: { river:.125, bamboo:.05 },
+        journey: { river:.135, bamboo:.035 },
+        weave: { river:.135, bamboo:.025 },
+        act2: { river:.135, bamboo:.015 },
+        pavilionArrival: { river:.095, bamboo:0 },
+        ending: { river:.085, bamboo:0 }
+      };
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      const buffers = new Map();
+      const decodePromises = new Map();
+      const decodeFailures = new Set();
+      const ambience = new Map();
+      const activeShots = new Set();
+      const playCounts = new Map();
+      let context = null;
+      let unlocked = false;
+      let muted = false;
+      let currentScene = 'landing';
+      let runGeneration = 0;
+
+      function ensureContext() {
+        if (context || !AudioContextClass) return context;
+        try {
+          context = new AudioContextClass();
+        } catch (_) {
+          context = null;
+        }
+        return context;
+      }
+
+      function safeResume() {
+        const audioContext = ensureContext();
+        if (!audioContext || audioContext.state === 'running') return Promise.resolve(Boolean(audioContext));
+        try {
+          const resumed = audioContext.resume();
+          return resumed && typeof resumed.catch === 'function' ? resumed.then(() => true).catch(() => false) : Promise.resolve(true);
+        } catch (_) {
+          return Promise.resolve(false);
+        }
+      }
+
+      function base64ToArrayBuffer(encoded) {
+        const binary = atob(encoded);
+        const bytes = new Uint8Array(binary.length);
+        for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+        return bytes.buffer;
+      }
+
+      function decodeTrack(name) {
+        if (buffers.has(name)) return Promise.resolve(buffers.get(name));
+        if (decodePromises.has(name)) return decodePromises.get(name);
+        const audioContext = ensureContext();
+        const encoded = window.CHISU_AUDIO_DATA && window.CHISU_AUDIO_DATA[name];
+        if (!audioContext || typeof encoded !== 'string' || !encoded) {
+          decodeFailures.add(name);
+          return Promise.resolve(null);
+        }
+        let bytes;
+        try {
+          bytes = base64ToArrayBuffer(encoded);
+        } catch (_) {
+          decodeFailures.add(name);
+          return Promise.resolve(null);
+        }
+        const decoding = new Promise(resolve => {
+          let settled = false;
+          const succeed = buffer => {
+            if (settled) return;
+            settled = true;
+            if (buffer) {
+              buffers.set(name, buffer);
+              decodeFailures.delete(name);
+              resolve(buffer);
+            } else {
+              decodeFailures.add(name);
+              resolve(null);
+            }
+          };
+          const fail = () => {
+            if (settled) return;
+            settled = true;
+            decodeFailures.add(name);
+            resolve(null);
+          };
+          try {
+            const result = audioContext.decodeAudioData(bytes.slice(0), succeed, fail);
+            if (result && typeof result.then === 'function') result.then(succeed, fail);
+          } catch (_) {
+            fail();
+          }
+        });
+        decodePromises.set(name, decoding);
+        return decoding;
+      }
+
+      function decodeAll() {
+        return Promise.all(Object.keys(tracks).map(decodeTrack));
+      }
+
+      function scheduleGain(gainNode, value, duration) {
+        const audioContext = ensureContext();
+        if (!audioContext || !gainNode) return;
+        const destination = Math.max(0, Math.min(1, value));
+        const now = audioContext.currentTime;
+        const current = Number.isFinite(gainNode.gain.value) ? gainNode.gain.value : 0;
+        gainNode.gain.cancelScheduledValues(now);
+        gainNode.gain.setValueAtTime(current, now);
+        if (duration > 0) gainNode.gain.linearRampToValueAtTime(destination, now + duration / 1000);
+        else gainNode.gain.setValueAtTime(destination, now);
+      }
+
+      function ensureAmbience(name) {
+        if (ambience.has(name)) return ambience.get(name);
+        const audioContext = ensureContext();
+        const buffer = buffers.get(name);
+        if (!audioContext || !buffer || !tracks[name] || !tracks[name].loop) return null;
+        try {
+          const source = audioContext.createBufferSource();
+          const gainNode = audioContext.createGain();
+          source.buffer = buffer;
+          source.loop = true;
+          gainNode.gain.value = 0;
+          source.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          const record = { source, gainNode };
+          source.onended = () => {
+            if (ambience.get(name) === record) ambience.delete(name);
+            try { source.disconnect(); gainNode.disconnect(); } catch (_) { /* Silent cleanup. */ }
+          };
+          source.start(0);
+          ambience.set(name, record);
+          return record;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function stopAmbience() {
+        ambience.forEach(({ source, gainNode }) => {
+          try { source.onended = null; source.stop(); } catch (_) { /* Already stopped. */ }
+          try { source.disconnect(); gainNode.disconnect(); } catch (_) { /* Silent cleanup. */ }
+        });
+        ambience.clear();
+      }
+
+      function stopShots() {
+        activeShots.forEach(record => {
+          try { record.source.onended = null; record.source.stop(); } catch (_) { /* Already stopped. */ }
+          try { record.source.disconnect(); record.gainNode.disconnect(); } catch (_) { /* Silent cleanup. */ }
+        });
+        activeShots.clear();
+      }
+
+      function fadeAmbience(targets, duration = 800) {
+        const audioContext = ensureContext();
+        if (!audioContext) return;
+        const shouldPlay = unlocked && !muted && !document.hidden;
+        if (shouldPlay) void safeResume();
+        const requested = { river:targets.river == null ? 0 : targets.river, bamboo:targets.bamboo == null ? 0 : targets.bamboo };
+        Object.entries(tracks).forEach(([name, config]) => {
+          if (!config.loop) return;
+          const record = shouldPlay ? ensureAmbience(name) : ambience.get(name);
+          if (record) scheduleGain(record.gainNode, shouldPlay ? requested[name] : 0, duration);
+        });
+      }
+
+      function setScene(name, duration = 900) {
+        currentScene = sceneMixes[name] ? name : currentScene;
+        fadeAmbience(sceneMixes[currentScene], duration);
+      }
+
+      function unlock() {
+        const firstUnlock = !unlocked;
+        unlocked = true;
+        const audioContext = ensureContext();
+        if (!audioContext) return false;
+        void safeResume();
+        if (firstUnlock) {
+          try {
+            const warmup = audioContext.createBufferSource();
+            warmup.buffer = audioContext.createBuffer(1, 1, audioContext.sampleRate);
+            warmup.connect(audioContext.destination);
+            warmup.start(0);
+          } catch (_) { /* Resume is sufficient when warmup is unavailable. */ }
+        }
+        void decodeAll().then(() => fadeAmbience(sceneMixes[currentScene], firstUnlock ? 900 : 240));
+        return true;
+      }
+
+      function playOneShot(name) {
+        const config = tracks[name];
+        if (!config || config.loop || !unlocked || muted || document.hidden) return false;
+        const played = playCounts.get(name) || 0;
+        if (played >= (config.max == null ? 1 : config.max)) return false;
+        playCounts.set(name, played + 1);
+        const generation = runGeneration;
+        const start = buffer => {
+          if (!buffer || generation !== runGeneration || muted || document.hidden) return false;
+          const audioContext = ensureContext();
+          if (!audioContext) return false;
+          try {
+            const source = audioContext.createBufferSource();
+            const gainNode = audioContext.createGain();
+            source.buffer = buffer;
+            source.loop = false;
+            gainNode.gain.value = config.gain;
+            source.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            const record = { source, gainNode };
+            const clean = () => {
+              activeShots.delete(record);
+              try { source.disconnect(); gainNode.disconnect(); } catch (_) { /* Silent cleanup. */ }
+            };
+            source.onended = clean;
+            activeShots.add(record);
+            source.start(0);
+            return true;
+          } catch (_) {
+            return false;
+          }
+        };
+        const buffer = buffers.get(name);
+        if (buffer) start(buffer);
+        else void decodeTrack(name).then(start);
+        return true;
+      }
+
+      function duck(targets, duration = 650) {
+        fadeAmbience(targets, duration);
+      }
+
+      function setMuted(nextMuted) {
+        muted = Boolean(nextMuted);
+        if (muted) stopShots();
+        fadeAmbience(sceneMixes[currentScene], muted ? 180 : 500);
+        return muted;
+      }
+
+      function resetRun() {
+        runGeneration += 1;
+        stopShots();
+        stopAmbience();
+        playCounts.clear();
+        currentScene = 'landing';
+        if (unlocked && !muted && !document.hidden) setScene('landing', 500);
+      }
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          stopShots();
+          ambience.forEach(({ gainNode }) => scheduleGain(gainNode, 0, 0));
+          try {
+            if (context && typeof context.suspend === 'function') {
+              const suspended = context.suspend();
+              if (suspended && typeof suspended.catch === 'function') void suspended.catch(() => false);
+            }
+          } catch (_) { /* Silent fallback. */ }
+        } else if (unlocked && !muted) {
+          void safeResume().then(() => setScene(currentScene, 700));
+        }
+      });
+
+      return {
+        unlock,
+        setScene,
+        playOneShot,
+        duck,
+        setMuted,
+        resetRun,
+        getState:() => ({
+          unlocked,
+          muted,
+          currentScene,
+          contextState:(context && context.state) || 'unavailable',
+          decoded:Array.from(buffers.keys()),
+          decodeFailures:Array.from(decodeFailures),
+          activeShots:activeShots.size,
+          playCounts:mapToObject(playCounts),
+          ambience:mapToObject(ambience, record => ({
+            active:true,
+            gain:Number(record.gainNode.gain.value.toFixed(3))
+          }))
+        })
+      };
+    })();
+    window.__chisuAudioState = () => AudioController.getState();
+    const opening = '旧案上铺着一张纸。你还没有落款。水声从竹帘外漫进来，纸角微微一湿。老人说，有什么话，投进江里就好。它会顺着灯光，漂到那个也该收到信的人手里。你蘸了墨，笔在指间停了一停。';
+    const journeys = {
+      '去':'信箱留着半圈旧胶印，你抬手擦掉门牌上的灰，门里的人看你一眼，把门关上。',
+      '做':'桌上摆着刚做完的东西，你扶正拍下一张照，屏幕亮起时，置顶头像已经换了。',
+      '说':'聊天框停在六年前，你重新打出那句话，拇指悬在发送键，最后一格一格删掉。',
+      '放':'纸箱上压着那把旧钥匙，你从钥匙圈上拧下来放进去，胶带拉过箱口盖住号码。',
+      '写':'信纸旁压着两张旧票根，你写完最后一行扣上笔，窗外招牌熄灭，地址仍空着。'
+    };
+    const weave = {
+      a:'你记起一个很普通的晚上。几个人坐在一起吃饭，菜已经凉了，也没人急着走。那时候你们都觉得以后还会经常见面。后来有人去了别的城市，有人成了父母，有人换了号码。那顿饭没有什么特别，现在却想不起下一次是什么时候。',
+      b:'以前说过很多以后。一起做件事，等有钱了去一个地方，父母老了住近一点，孩子出生了要通知，等忙完这一阵再好好聊。没有谁故意食言。只是后来每个人都有了新的事要先处理。',
+      c:'真正走散的那天其实没人注意。可能只是最后一次下班后没有一起吃饭，最后一个没有回复的消息，最后一次回家时少问了一句。没有争吵，也没有告别。很久以后，你才发现那就是最后一次。'
+    };
+    const storyState = {
+      originChoice: '去',
+      destinationChoice: null,
+      currentAct: 1,
+      currentScene: 'landing',
+      currentBeat: 0,
+      netAction: null
+    };
+    let page = 'landing', chosen = '去', typed = false, revealIndex = 0, holdTimer;
+    const clearCinematicAttention = () => {
+      document.querySelectorAll('.scene').forEach(scene => scene.classList.remove(
+        'is-cinematic-text-focus',
+        'is-cinematic-interaction-hold',
+        'is-cinematic-ending-still'
+      ));
+    };
+    const show = name => {
+      document.getElementById(page).classList.remove('active');
+      clearCinematicAttention();
+      page=name;
+      storyState.currentScene=name;
+      document.getElementById(page).classList.add('active');
+      AudioController.setScene(name);
+    };
+    const lines = [
+      '旧案上铺着一张纸',
+      '你还没有落款',
+      '水声从竹帘外漫进来',
+      '纸角微微一湿',
+      '老人说有什么话',
+      '投进江里就好',
+      '它会顺着灯光',
+      '漂到那个也该收到信的人手里',
+      '你蘸了墨',
+      '笔在指间停了一停'
+    ];
+    const container = document.getElementById('openingText');
+    let lineIndex = 0;
+    let charIndex = 0;
+    function typeWriter() {
+      if (lineIndex < lines.length) {
+        const currentLine = lines[lineIndex];
+        if (charIndex <= currentLine.length) {
+          let textToShow = '';
+          for (let i = 0; i < lineIndex; i++) {
+            textToShow += lines[i] + '<br>';
+          }
+          textToShow += currentLine.substring(0, charIndex);
+          container.innerHTML = textToShow;
+          charIndex++;
+          setTimeout(typeWriter, 150);
+        } else {
+          lineIndex++;
+          charIndex = 0;
+          setTimeout(typeWriter, 300);
+        }
+      } else {
+        document.querySelector('.landing-hint').classList.add('is-visible');
+        typed = true;
+      }
+    }
+    document.getElementById('landing').addEventListener('click', () => {
+      AudioController.unlock();
+      if (typed) show('compose');
+    });
+    const journeyBeats = {
+      '去': [['信箱留着半圈旧胶印，', '你抬手擦掉门牌上的灰，'], ['门里的人看你一眼，', '把门关上。']],
+      '做': [['桌上摆着刚做完的东西', '你扶正拍下一张照'], ['屏幕亮起时', '置顶头像已经换了']],
+      '说': [['聊天框停在六年前，', '你重新打出那句话，'], ['拇指悬在发送键，', '最后一格一格删掉。']],
+      '放': [['纸箱上压着那把旧钥匙，', '你从钥匙圈上拧下来放进去，'], ['胶带拉过箱口，', '盖住号码。']],
+      '写': [['信纸旁压着两张旧票根，', '你写完最后一行扣上笔，'], ['窗外招牌熄灭，', '地址仍空着。']]
+    };
+    const journeyBeat = document.getElementById('journeyBeat');
+    let journeyBeatIndex = 0;
+    let journeyTransitioning = false;
+    const cleanJourneyNarrative = text => text.replace(/[，。！？；：、,.!?;:“”‘’（）()《》〈〉【】\[\]——…]/g, '');
+    function renderJourneyBeat({ immediate = false } = {}) {
+      const columns = journeyBeats[chosen][journeyBeatIndex];
+      journeyTransitioning = true;
+      document.getElementById('journey').classList.add('is-cinematic-text-focus');
+      journeyBeat.classList.remove('is-visible');
+      window.setTimeout(() => {
+        journeyBeat.replaceChildren();
+        columns.forEach((line, index) => {
+          const column = document.createElement('span');
+          column.className = 'vertical-column';
+          column.textContent = cleanJourneyNarrative(line);
+          column.style.setProperty('--column-delay', `${index * 110}ms`);
+          journeyBeat.append(column);
+        });
+        requestAnimationFrame(() => journeyBeat.classList.add('is-visible'));
+        journeyTransitioning = false;
+      }, immediate ? 0 : 520);
+    }
+    document.querySelectorAll('#compose .menu-item[data-choice]').forEach(item => item.addEventListener('click', () => {
+      chosen = item.dataset.choice;
+      storyState.originChoice = chosen;
+      storyState.currentBeat = 0;
+      journeyBeatIndex = 0;
+      show('journey');
+      renderJourneyBeat({ immediate: true });
+    }));
+    document.getElementById('journey').addEventListener('click', () => {
+      if (journeyTransitioning) return;
+      if (journeyBeatIndex < journeyBeats[chosen].length - 1) {
+        journeyBeatIndex++;
+        renderJourneyBeat();
+      } else {
+        journeyTransitioning = true;
+        journeyBeat.classList.remove('is-visible');
+        window.setTimeout(() => {
+          document.getElementById('journey').classList.remove('is-cinematic-text-focus');
+          journeyTransitioning = false;
+          show('weave');
+        }, 620);
+      }
+    });
+    let choiceResolving = false;
+    document.querySelectorAll('#weave .cinematic-choice').forEach(choice => choice.addEventListener('click', () => {
+      if (choiceResolving) return;
+      choiceResolving = true;
+      storyState.destinationChoice = choice.dataset.destination;
+      const stage = document.querySelector('#weave .cinematic-choice-stage');
+      stage.classList.add('is-selecting');
+      choice.classList.add('is-selected');
+      window.setTimeout(() => {
+        stage.classList.add('is-departing');
+        window.setTimeout(beginDeliveryFromWeave, 500);
+      }, 520);
+    }));
+    const act2Scene = document.getElementById('act2');
+    const act2Narrative = document.getElementById('act2Narrative');
+    const act2ChoiceStage = document.getElementById('act2ChoiceStage');
+    const act2NetPaper = document.querySelector('#act2 .act2-net-paper');
+    const act2WaterPaper = document.querySelector('#act2 .act2-water-paper');
+    const act2Ripple = document.querySelector('#act2 .act2-ripple');
+    const act2PaperBoat = document.getElementById('act2PaperBoat');
+    const act2PaperLabel = document.getElementById('act2PaperLabel');
+    const pavilionArrival = document.getElementById('pavilionArrival');
+    const pavilionNarrative = document.getElementById('pavilionNarrative');
+    const pavilionWaterAffordance = document.getElementById('pavilionWaterAffordance');
+    const pavilionWaterRipple = document.getElementById('pavilionWaterRipple');
+    const pavilionLanternAnswer = document.getElementById('pavilionLanternAnswer');
+    const pavilionReflectionHitTarget = document.getElementById('pavilionReflectionHitTarget');
+    const pavilionReflectionHint = document.getElementById('pavilionReflectionHint');
+    const pavilionFireflyGuide = document.getElementById('pavilionFireflyGuide');
+    const pavilionEnding = document.getElementById('pavilionEnding');
+    const pavilionEndingTitle = document.getElementById('pavilionEndingTitle');
+    let act2Phase = 'idle', act2Locked = false, act2TimelineToken = 0;
+    let act2Timers = [];
+    const riverPaperLayout = { x:.29, y:.70, width:.105, compression:.62, rotation:-8 };
+    let riverPaperPhase = 'hidden', riverPaperLocked = false, riverPaperLayer = null, riverPaperHitTarget = null;
+    let riverPaperContext = null, riverPaperFrame = 0, riverPaperStartedAt = 0, riverPaperPressedAt = 0, riverPaperOcclusionAt = 0, riverPaperHintAt = 0, riverPaperHintTimer = 0, riverPaperResizeObserver = null;
+    let riverPaperBounds = null, riverPaperComposite = null, riverPaperCompositeContext = null;
+    const riverPaperTexture = new Image();
+    const riverPaperBackground = document.querySelector('#act2 > .scene-art');
+    riverPaperTexture.src = 'assets/interaction1_old_paper.png';
+    let pavilionInteractionPhase = 'hidden', pavilionInteractionLocked = false, pavilionEndingPhase = 'idle';
+    const pavilionFireflyFadeMs = 550;
+    const pavilionFireflyPathMs = 3700;
+    const pavilionFireflyApproachMs = 850;
+    const act2Branches = {
+      net: [
+        ['网眼里卡着一角纸', '水已经把字泡开了'],
+        ['你伸手去取', '纸却先碎了一小块']
+      ],
+      water: [
+        ['纸贴着水走了一阵', '没有沉'],
+        ['船夫没有回头', '只是把篙换到了另一边']
+      ]
+    };
+    const originCallbacks = {
+      '去': ['有些路走过以后', '才知道哪里算回来'],
+      '做': ['桌上的东西冷了', '手上的温度还在'],
+      '说': ['那句话没有发出去', '却一直停在那里'],
+      '放': ['水先替你松了手', '岸还没有到'],
+      '写': ['字落下来以后', '已经不是原来的话']
+    };
+    function setAct2Phase(phase) {
+      act2Phase = phase;
+    }
+    function queueAct2(delay, callback) {
+      const token = act2TimelineToken;
+      const timer = window.setTimeout(() => {
+        if (token === act2TimelineToken) callback();
+      }, delay);
+      act2Timers.push(timer);
+      return timer;
+    }
+    function clearAct2Timers() {
+      act2Timers.forEach(timer => clearTimeout(timer));
+      act2Timers = [];
+    }
+    function mountAct2Narrative(lines, stagger = 110) {
+      act2Scene.classList.add('is-cinematic-text-focus');
+      act2Narrative.classList.remove('is-visible', 'is-fading');
+      act2Narrative.replaceChildren();
+      lines.forEach((line, index) => {
+        const column = document.createElement('span');
+        column.className = 'act2-column';
+        column.textContent = cleanJourneyNarrative(line);
+        column.style.setProperty('--act2-delay', `${index * stagger}ms`);
+        act2Narrative.append(column);
+      });
+      requestAnimationFrame(() => act2Narrative.classList.add('is-visible'));
+    }
+    function renderAct2Narrative(lines) { mountAct2Narrative(lines); }
+    function unmountAct2Narrative() {
+      act2Scene.classList.remove('is-cinematic-text-focus');
+      act2Narrative.classList.remove('is-visible', 'is-fading');
+      act2Narrative.replaceChildren();
+    }
+    function fadeOutAct2Narrative(callback, duration = 650) {
+      act2Narrative.classList.add('is-fading');
+      queueAct2(duration, () => {
+        unmountAct2Narrative();
+        callback?.();
+      });
+    }
+    function clearAct2Narrative() { unmountAct2Narrative(); }
+    function clearRiverPaperInteraction() {
+      act2Scene.classList.remove('is-cinematic-interaction-hold');
+      cancelAnimationFrame(riverPaperFrame);
+      clearTimeout(riverPaperHintTimer);
+      riverPaperHintTimer = 0;
+      riverPaperHintAt = 0;
+      riverPaperResizeObserver?.disconnect();
+      riverPaperResizeObserver = null;
+      riverPaperLayer?.remove();
+      riverPaperHitTarget?.remove();
+      riverPaperLayer = null;
+      riverPaperHitTarget = null;
+      riverPaperContext = null;
+      riverPaperBounds = null;
+      riverPaperPhase = 'hidden';
+      riverPaperLocked = false;
+    }
+    function resizeRiverPaperCanvas() {
+      if (!riverPaperLayer || !riverPaperContext) return;
+      const box = riverPaperLayer.getBoundingClientRect();
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      riverPaperLayer.width = Math.max(1, Math.round(box.width * ratio));
+      riverPaperLayer.height = Math.max(1, Math.round(box.height * ratio));
+      riverPaperContext.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+    function getRiverPaperMetrics(sceneWidth, sceneHeight, time) {
+      const waiting = riverPaperPhase === 'WAITING';
+      const reveal = riverPaperPhase === 'revealing' ? Math.min(1, (time - riverPaperStartedAt) / 700) : 1;
+      const eased = 1 - Math.pow(1 - reveal, 3);
+      const floatX = waiting ? Math.sin(time * .00031) * .35 : 0;
+      const floatY = waiting ? Math.sin(time * .00047) * .22 : 0;
+      const pressed = riverPaperPhase === 'PRESSED' ? Math.min(1, (time - riverPaperPressedAt) / 850) : 0;
+      const occluding = riverPaperPhase === 'OCCLUDING';
+      const occlusionProgress = occluding ? Math.min(1, (time - riverPaperOcclusionAt) / 1750) : 0;
+      const occlusionEase = occlusionProgress * occlusionProgress * (3 - 2 * occlusionProgress);
+      const pressDepth = 14;
+      const settleDepth = riverPaperPhase === 'PRESSED' ? pressed * pressDepth : (occluding ? pressDepth : 0);
+      const visibleWidth = Math.min(180, Math.max(82, sceneWidth * riverPaperLayout.width));
+      const width = interaction1Debug ? visibleWidth * 2 : visibleWidth;
+      const height = width / (riverPaperTexture.naturalWidth / riverPaperTexture.naturalHeight) * riverPaperLayout.compression;
+      return {
+        x: interaction1Debug ? sceneWidth * .5 : sceneWidth * riverPaperLayout.x + (occluding ? Math.sin(occlusionProgress * Math.PI) * .8 : 0) + floatX,
+        y: interaction1Debug ? sceneHeight * .5 : sceneHeight * riverPaperLayout.y + settleDepth + (occluding ? Math.sin(occlusionProgress * Math.PI) * .35 : 0) + floatY,
+        width, height,
+        opacity:.92 * eased,
+        scale:(.985 + eased * .015) * (1 - occlusionEase * .04),
+        submersion:occlusionEase,
+        blur: occluding ? Math.max(0, (occlusionEase - .78) / .22) * .32 : 0,
+        rotation:(riverPaperLayout.rotation + (waiting ? Math.sin(time * .00028) * .06 : 0) + (riverPaperPhase === 'PRESSED' ? pressed * 3 : 0) + (occluding ? 3 + Math.sin(occlusionProgress * Math.PI) * .12 : 0)) * Math.PI / 180
+      };
+    }
+    function ensureRiverPaperComposite(width, height) {
+      const density = 2, pixelWidth = Math.ceil(width * density), pixelHeight = Math.ceil(height * density);
+      if (!riverPaperComposite || riverPaperComposite.width !== pixelWidth || riverPaperComposite.height !== pixelHeight) {
+        riverPaperComposite = document.createElement('canvas');
+        riverPaperComposite.width = pixelWidth;
+        riverPaperComposite.height = pixelHeight;
+        riverPaperCompositeContext = riverPaperComposite.getContext('2d');
+      }
+      return density;
+    }
+    function drawRiverSampleIntoPaper(metrics, sceneWidth, sceneHeight) {
+      if (!riverPaperBackground.complete || !riverPaperBackground.naturalWidth || !riverPaperTexture.complete || !riverPaperTexture.naturalWidth) return false;
+      const density = ensureRiverPaperComposite(metrics.width, metrics.height);
+      const context = riverPaperCompositeContext;
+      const width = metrics.width, height = metrics.height;
+      context.setTransform(density, 0, 0, density, 0, 0);
+      context.clearRect(0, 0, width, height);
+      const cover = Math.max(sceneWidth / riverPaperBackground.naturalWidth, sceneHeight / riverPaperBackground.naturalHeight);
+      const renderedWidth = riverPaperBackground.naturalWidth * cover, renderedHeight = riverPaperBackground.naturalHeight * cover;
+      const offsetX = (sceneWidth - renderedWidth) / 2, offsetY = (sceneHeight - renderedHeight) / 2;
+      const sourceX = (metrics.x - width / 2 - offsetX) / cover;
+      const sourceY = (metrics.y - height / 2 - offsetY) / cover;
+      const sourceWidth = width / cover, sourceHeight = height / cover;
+      context.drawImage(riverPaperBackground, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, width, height);
+      context.globalCompositeOperation = 'destination-in';
+      context.filter = 'blur(.3px)';
+      context.drawImage(riverPaperTexture, 0, 0, width, height);
+
+      // Keep the river visible through the fragment, but let the fibres and folds read
+      // before the water begins to consume it. The alpha cutout remains the only edge.
+      context.globalCompositeOperation = 'source-atop';
+      context.filter = 'saturate(.48) contrast(1.04) brightness(.98)';
+      context.globalAlpha = .46;
+      context.drawImage(riverPaperTexture, 0, 0, width, height);
+      // A second, deliberately low-weight material pass only restores the folded
+      // fibre detail. It remains clipped by the torn alpha silhouette, so no
+      // perimeter or rectangular backing is introduced.
+      context.filter = 'saturate(.38) contrast(1.18) brightness(.9)';
+      context.globalAlpha = .13;
+      context.drawImage(riverPaperTexture, 0, 0, width, height);
+      context.globalAlpha = 1;
+      context.filter = 'none';
+
+      const paperTone = context.createLinearGradient(0, 0, 0, height);
+      paperTone.addColorStop(0, 'rgba(231,208,174,.1)');
+      paperTone.addColorStop(.42, 'rgba(196,163,124,.065)');
+      paperTone.addColorStop(.74, 'rgba(117,91,66,.13)');
+      paperTone.addColorStop(1, 'rgba(174,147,112,.27)');
+      context.fillStyle = paperTone;
+      context.fillRect(0, 0, width, height);
+      if (metrics.submersion > 0) {
+        const waterTint = context.createLinearGradient(0, 0, 0, height);
+        waterTint.addColorStop(0, `rgba(220,192,149,${metrics.submersion * .025})`);
+        waterTint.addColorStop(.55, `rgba(202,171,130,${metrics.submersion * .13})`);
+        waterTint.addColorStop(1, `rgba(171,140,103,${metrics.submersion * .34})`);
+        context.globalCompositeOperation = 'source-atop';
+        context.fillStyle = waterTint;
+        context.fillRect(0, 0, width, height);
+
+        // Several irregular vertical mask fronts let the river consume lower torn edges first.
+        context.globalCompositeOperation = 'destination-out';
+        const fronts = [.08, .2, .33, .47, .61, .76, .91];
+        fronts.forEach((offset, index) => {
+          const irregularity = Math.sin((offset * 12.7) + metrics.submersion * 7.3) * height * .052;
+          const front = height * (1 - metrics.submersion) + irregularity;
+          const fade = height * (.08 + (index % 3) * .017);
+          const occlusion = context.createLinearGradient(0, front - fade, 0, front + fade * 1.9);
+          occlusion.addColorStop(0, 'rgba(0,0,0,0)');
+          occlusion.addColorStop(.45, `rgba(0,0,0,${.24 + metrics.submersion * .3})`);
+          occlusion.addColorStop(1, `rgba(0,0,0,${.62 + metrics.submersion * .38})`);
+          context.fillStyle = occlusion;
+          context.fillRect(width * (offset - .1), 0, width * .2, height);
+        });
+      }
+      context.globalCompositeOperation = 'source-over';
+      return true;
+    }
+    function drawRiverPaperCanvas(time) {
+      if (!riverPaperLayer || !riverPaperContext || !riverPaperLayer.isConnected) return;
+      const context = riverPaperContext;
+      const box = riverPaperLayer.getBoundingClientRect();
+      const width = box.width, height = box.height;
+      context.clearRect(0, 0, width, height);
+      if (!riverPaperTexture.complete || !riverPaperBackground.complete) {
+        riverPaperFrame = requestAnimationFrame(drawRiverPaperCanvas);
+        return;
+      }
+      const metrics = getRiverPaperMetrics(width, height, time);
+      if (!drawRiverSampleIntoPaper(metrics, width, height)) { riverPaperFrame = requestAnimationFrame(drawRiverPaperCanvas); return; }
+      riverPaperBounds = metrics;
+      if (riverPaperHitTarget) {
+        const padding = Math.min(18, Math.max(12, metrics.width * .08));
+        riverPaperHitTarget.style.left = `${metrics.x - metrics.width / 2 - padding}px`;
+        riverPaperHitTarget.style.top = `${metrics.y - metrics.height / 2 - padding}px`;
+        riverPaperHitTarget.style.width = `${metrics.width + padding * 2}px`;
+        riverPaperHitTarget.style.height = `${metrics.height + padding * 2}px`;
+      }
+
+      // A restrained contact darkening anchors the paper on the water without a drop shadow.
+      context.save();
+      context.translate(metrics.x, metrics.y + metrics.height * .43);
+      context.rotate(metrics.rotation);
+      context.filter = 'blur(4px)'; context.fillStyle = `rgba(72,61,49,${.055 * (1 - metrics.submersion * .72)})`;
+      context.beginPath(); context.ellipse(0, 0, metrics.width * .46, Math.max(3, metrics.height * .115), 0, 0, Math.PI * 2); context.fill();
+      context.restore();
+
+      // One quiet ink bloom carries the words into the river while the mask rises.
+      const inkElapsed = riverPaperPhase === 'OCCLUDING' ? time - riverPaperOcclusionAt - 120 : -1;
+      if (inkElapsed >= 0 && inkElapsed < 1200) {
+        const progress = inkElapsed / 1200;
+        context.save();
+        context.translate(metrics.x, metrics.y + metrics.height * .36);
+        context.rotate(metrics.rotation);
+        context.scale(.74 + progress * .44, .66 + progress * .24);
+        context.filter = 'blur(7px)';
+        const ink = context.createRadialGradient(0, 0, 0, 0, 0, metrics.width * .3);
+        ink.addColorStop(0, `rgba(85,68,54,${Math.sin(progress * Math.PI) * .12})`);
+        ink.addColorStop(.65, `rgba(101,79,60,${Math.sin(progress * Math.PI) * .045})`);
+        ink.addColorStop(1, 'rgba(101,79,60,0)');
+        context.fillStyle = ink;
+        context.beginPath(); context.ellipse(0, 0, metrics.width * .3, Math.max(3, metrics.height * .25), 0, 0, Math.PI * 2); context.fill();
+        context.restore();
+      }
+      // The sole ripple arrives after most of the paper has already slipped below the surface.
+      const rippleElapsed = riverPaperPhase === 'OCCLUDING' ? time - riverPaperOcclusionAt - 1050 : -1;
+      if (rippleElapsed >= 0 && rippleElapsed < 1400) {
+        const progress = rippleElapsed / 1400;
+        context.save();
+        context.translate(metrics.x, metrics.y + metrics.height * .46);
+        context.rotate(metrics.rotation);
+        context.scale(1 + progress * .55, 1 + progress * .16);
+        context.strokeStyle = `rgba(213,183,139,${Math.sin(progress * Math.PI) * .15})`;
+        context.lineWidth = .8;
+        context.beginPath();
+        context.ellipse(0, 0, metrics.width * .68, Math.max(3, metrics.height * .18), 0, 0, Math.PI * 2);
+        context.stroke();
+        context.restore();
+      }
+      context.save();
+      context.translate(metrics.x, metrics.y);
+      context.rotate(metrics.rotation); context.scale(metrics.scale, metrics.scale);
+      context.filter = `blur(${metrics.blur}px)`;
+      context.globalAlpha = metrics.opacity;
+      context.drawImage(riverPaperComposite, -metrics.width / 2, -metrics.height / 2, metrics.width, metrics.height);
+      if (interaction1Debug) {
+        context.globalAlpha = 1;
+        context.globalCompositeOperation = 'source-atop';
+        context.fillStyle = '#ff00ff';
+        context.fillRect(-metrics.width / 2, -metrics.height / 2, metrics.width, metrics.height);
+      }
+      context.restore();
+      riverPaperFrame = requestAnimationFrame(drawRiverPaperCanvas);
+    }
+    function handleRiverPaperPointer(event) {
+      if (riverPaperPhase !== 'WAITING' || riverPaperLocked) return;
+      riverPaperLocked = true;
+      riverPaperPhase = 'PRESSED';
+      riverPaperPressedAt = performance.now();
+      riverPaperHitTarget?.classList.remove('is-enabled');
+      riverPaperHitTarget?.setAttribute('aria-disabled', 'true');
+      clearTimeout(riverPaperHintTimer);
+      riverPaperHintTimer = 0;
+      riverPaperHintAt = 0;
+      AudioController.duck({ river:.105, bamboo:.008 }, 600);
+      console.log('[Interaction1] paper tapped');
+      if (interaction1Debug) console.log('[Interaction1] PAPER POINTER UP');
+      event.preventDefault();
+      // The paper first settles 14px into the river over 850ms; only then does
+      // the irregular bottom-up water mask begin to consume it.
+      queueAct2(850, () => {
+        if (riverPaperPhase !== 'PRESSED') return;
+        riverPaperPhase = 'OCCLUDING';
+        riverPaperOcclusionAt = performance.now();
+        setAct2Phase('INTERACTION1_OCCLUDING');
+        AudioController.playOneShot('paper');
+        queueAct2(2450, () => {
+          if (riverPaperPhase !== 'OCCLUDING') return;
+          riverPaperPhase = 'DONE';
+          setAct2Phase('INTERACTION1_DONE');
+          clearRiverPaperInteraction();
+          queueAct2(900, enterPavilionArrival);
+        });
+      });
+    }
+    function beginRiverPaperInteraction() {
+      if (riverPaperPhase !== 'hidden') return;
+      riverPaperPhase = 'revealing';
+      riverPaperLocked = false;
+      act2Locked = true;
+      // The river plate returns to its untransformed reference frame before the
+      // canvas samples it, preserving paper-to-water registration.
+      act2Scene.classList.add('is-cinematic-interaction-hold');
+      console.log('[Interaction1 ACTIVE]', {
+        phase: riverPaperPhase,
+        scene: page,
+        currentAct: storyState.currentAct,
+        currentScene: storyState.currentScene,
+        paperVisible: true,
+        interactionLocked: riverPaperLocked
+      });
+      const layer = document.createElement('canvas');
+      layer.className = 'river-paper-canvas';
+      layer.setAttribute('aria-hidden', 'true');
+      const hitTarget = document.createElement('button');
+      hitTarget.type = 'button';
+      hitTarget.className = 'river-paper-hit-target';
+      hitTarget.setAttribute('aria-label', '触碰漂来的信笺');
+      if (interaction1Debug || new URLSearchParams(window.location.search).has('paperDebug')) hitTarget.classList.add('is-debug');
+      hitTarget.addEventListener('pointerup', handleRiverPaperPointer);
+      act2Scene.append(layer);
+      act2Scene.append(hitTarget);
+      riverPaperLayer = layer;
+      riverPaperHitTarget = hitTarget;
+      riverPaperContext = layer.getContext('2d');
+      riverPaperStartedAt = performance.now();
+      resizeRiverPaperCanvas();
+      riverPaperResizeObserver = new ResizeObserver(resizeRiverPaperCanvas);
+      riverPaperResizeObserver.observe(act2Scene);
+      riverPaperFrame = requestAnimationFrame(drawRiverPaperCanvas);
+      queueAct2(700, () => {
+        if (riverPaperPhase !== 'revealing' || !riverPaperLayer) return;
+        riverPaperPhase = 'WAITING';
+        hitTarget.classList.add('is-enabled');
+        setAct2Phase('INTERACTION1_WAITING');
+      });
+    }
+    function resetAct2Visuals() {
+      act2TimelineToken++;
+      clearAct2Timers();
+      clearRiverPaperInteraction();
+      resetPavilionEnding();
+      act2Scene.classList.remove('is-boatman-visible', 'is-next-hook', 'is-drifting', 'is-dissolving-in', 'is-cinematic-text-focus', 'is-cinematic-interaction-hold');
+      act2NetPaper.classList.remove('is-visible');
+      act2WaterPaper.classList.remove('is-visible', 'is-sailing');
+      act2Ripple.classList.remove('is-visible');
+      act2ChoiceStage.classList.remove('is-visible', 'is-resolving');
+      act2ChoiceStage.querySelectorAll('.act2-choice').forEach(choice => choice.classList.remove('is-selected'));
+      act2PaperBoat.classList.remove('is-visible');
+      act2PaperLabel.classList.remove('is-visible');
+      unmountAct2Narrative();
+    }
+    function mountPavilionNarrative(lines, stagger = 180) {
+      pavilionNarrative.replaceChildren();
+      pavilionNarrative.classList.remove('is-fading');
+      lines.forEach((line, index) => {
+        const column = document.createElement('span');
+        column.className = 'pavilion-column';
+        column.textContent = cleanJourneyNarrative(line);
+        column.style.setProperty('--pavilion-delay', `${index * stagger}ms`);
+        pavilionNarrative.append(column);
+      });
+      requestAnimationFrame(() => pavilionNarrative.classList.add('is-visible'));
+    }
+    function appendPavilionNarrativeColumn(line) {
+      const column = document.createElement('span');
+      column.className = 'pavilion-column';
+      column.textContent = cleanJourneyNarrative(line);
+      column.style.setProperty('--pavilion-delay', '0ms');
+      pavilionNarrative.append(column);
+    }
+    function unmountPavilionNarrative() {
+      pavilionArrival.classList.remove('is-cinematic-text-focus');
+      pavilionNarrative.classList.remove('is-visible', 'is-fading');
+      pavilionNarrative.replaceChildren();
+    }
+    function fadeOutPavilionNarrative(callback, duration = 1000) {
+      pavilionNarrative.classList.add('is-fading');
+      queueAct2(duration, () => {
+        unmountPavilionNarrative();
+        callback?.();
+      });
+    }
+    function resetPavilionEnding() {
+      pavilionEndingPhase = 'idle';
+      document.body.classList.remove('is-pavilion-ending');
+      pavilionEndingTitle.classList.remove('is-visible');
+      pavilionEnding.setAttribute('aria-hidden', 'true');
+    }
+    function beginPavilionEnding() {
+      pavilionInteractionPhase = 'ending';
+      pavilionEndingPhase = 'SILENT_HOLD_1';
+      pavilionArrival.classList.remove('is-cinematic-text-focus', 'is-cinematic-interaction-hold');
+      pavilionArrival.classList.add('is-cinematic-ending-still');
+      storyState.currentScene = 'act2_pavilion_ending';
+      AudioController.setScene('ending', 1300);
+      setAct2Phase('FINAL_SILENT_HOLD_1');
+      pavilionEnding.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('is-pavilion-ending');
+
+      queueAct2(1800, () => {
+        pavilionEndingPhase = 'ENVIRONMENT_SETTLE';
+        setAct2Phase('FINAL_ENVIRONMENT_SETTLE');
+        pavilionLanternAnswer.classList.add('is-ending-settle');
+        pavilionWaterAffordance.classList.add('is-ending-settle');
+        pavilionEndingPhase = 'TITLE_IN';
+        setAct2Phase('FINAL_TITLE_IN');
+        pavilionEndingTitle.classList.add('is-visible');
+
+        queueAct2(1300, () => {
+          pavilionEndingPhase = 'FINAL_IDLE';
+          pavilionInteractionPhase = 'final-idle';
+          setAct2Phase('FINAL_IDLE');
+        });
+      });
+    }
+    function resetPavilionInteraction() {
+      pavilionArrival.classList.remove('is-cinematic-text-focus', 'is-cinematic-interaction-hold', 'is-cinematic-ending-still');
+      pavilionInteractionPhase = 'clean';
+      pavilionInteractionLocked = false;
+      pavilionWaterAffordance.classList.remove('is-noticing', 'is-guiding', 'is-responding', 'is-ending-settle');
+      pavilionWaterRipple.classList.remove('is-visible');
+      pavilionLanternAnswer.classList.remove('is-noticing', 'is-guiding', 'is-visible', 'is-ending-settle');
+      pavilionFireflyGuide.classList.remove('is-intro', 'is-waiting', 'is-hovered', 'is-approaching', 'is-fading');
+      pavilionReflectionHitTarget.classList.remove('is-enabled');
+      pavilionReflectionHitTarget.setAttribute('aria-disabled', 'true');
+      pavilionReflectionHint.classList.remove('is-visible');
+      pavilionReflectionHint.replaceChildren();
+      unmountPavilionNarrative();
+      resetPavilionEnding();
+    }
+    function showPavilionReflectionHint() {
+      if (pavilionInteractionPhase !== 'waiting' || pavilionInteractionLocked) return;
+      pavilionReflectionHint.textContent = '轻触萤火';
+      requestAnimationFrame(() => pavilionReflectionHint.classList.add('is-visible'));
+    }
+    function finishPavilionNarrative() {
+      setAct2Phase('PAVILION_NARRATIVE_OUT');
+      fadeOutPavilionNarrative(() => {
+        pavilionWaterAffordance.classList.remove('is-noticing', 'is-guiding', 'is-responding');
+        pavilionWaterRipple.classList.remove('is-visible');
+        pavilionLanternAnswer.classList.remove('is-noticing', 'is-guiding', 'is-visible');
+        pavilionFireflyGuide.classList.remove('is-intro', 'is-waiting', 'is-hovered', 'is-approaching', 'is-fading');
+        pavilionReflectionHint.classList.remove('is-visible');
+        pavilionReflectionHint.replaceChildren();
+        beginPavilionEnding();
+      }, 1000);
+    }
+    function beginPavilionNarrativeResponse() {
+      storyState.currentScene = 'act2_pavilion_narrative';
+      pavilionInteractionPhase = 'narrative';
+      pavilionArrival.classList.add('is-cinematic-text-focus');
+      setAct2Phase('PAVILION_NARRATIVE');
+      pavilionNarrative.replaceChildren();
+      pavilionNarrative.classList.remove('is-fading');
+      appendPavilionNarrativeColumn('亭里的杯盏轻轻一响');
+      requestAnimationFrame(() => pavilionNarrative.classList.add('is-visible'));
+
+      // Let the first line finish its 900ms entrance, then give it a full quiet
+      // second alone before the second column joins it.
+      queueAct2(1900, () => {
+        appendPavilionNarrativeColumn('有人抬头望向江面');
+        queueAct2(900, () => {
+          setAct2Phase('PAVILION_NARRATIVE_HOLD');
+          queueAct2(5800, finishPavilionNarrative);
+        });
+      });
+    }
+    function handlePavilionFireflyPointer(event) {
+      if (pavilionInteractionPhase !== 'waiting' || pavilionInteractionLocked) return;
+      pavilionInteractionLocked = true;
+      pavilionInteractionPhase = 'responding';
+      pavilionReflectionHitTarget.classList.remove('is-enabled');
+      pavilionReflectionHitTarget.setAttribute('aria-disabled', 'true');
+      console.log('[Interaction2] FIREFLY TAP');
+      event.preventDefault();
+      pavilionReflectionHint.classList.remove('is-visible');
+      queueAct2(350, () => pavilionReflectionHint.replaceChildren());
+      pavilionFireflyGuide.classList.remove('is-intro', 'is-waiting', 'is-hovered');
+      pavilionFireflyGuide.classList.add('is-approaching');
+      queueAct2(pavilionFireflyApproachMs, () => {
+        pavilionFireflyGuide.classList.remove('is-approaching');
+        pavilionFireflyGuide.classList.add('is-fading');
+        queueAct2(420, () => pavilionFireflyGuide.classList.remove('is-fading'));
+      });
+      pavilionWaterAffordance.classList.remove('is-noticing', 'is-guiding');
+      pavilionLanternAnswer.classList.remove('is-noticing', 'is-guiding');
+      setAct2Phase('PAVILION_WATER_RESPONDING');
+      // The lantern only answers after the firefly has crossed into its light.
+      queueAct2(pavilionFireflyApproachMs, () => {
+        pavilionLanternAnswer.classList.add('is-visible');
+        AudioController.playOneShot('firefly');
+      });
+      queueAct2(pavilionFireflyApproachMs + 70, () => {
+        pavilionWaterAffordance.classList.add('is-responding');
+        pavilionWaterRipple.classList.add('is-visible');
+      });
+      // Wait until the 1400ms water response is complete, then leave one quiet beat.
+      const narrativeDelay = pavilionFireflyApproachMs + 70 + 1400 + 900;
+      queueAct2(narrativeDelay - 260, () => {
+        AudioController.duck({ river:.095, bamboo:0 }, 700);
+        AudioController.playOneShot('cup');
+      });
+      queueAct2(narrativeDelay, beginPavilionNarrativeResponse);
+    }
+    function beginPavilionFireflyInteraction() {
+      if (pavilionInteractionPhase !== 'clean') return;
+      pavilionInteractionPhase = 'guiding';
+      // The cue is the only motion that matters while the player is discovering it.
+      pavilionArrival.classList.add('is-cinematic-interaction-hold');
+      setAct2Phase('PAVILION_FIREFLY_GUIDING');
+      pavilionFireflyGuide.classList.add('is-intro');
+      // The pavilion is only interactive after the firefly has completed its three
+      // readable movement phrases and settled beside the exterior lantern light.
+      queueAct2(pavilionFireflyFadeMs + pavilionFireflyPathMs, () => {
+        if (pavilionInteractionPhase !== 'guiding' || pavilionInteractionLocked) return;
+        pavilionFireflyGuide.classList.remove('is-intro');
+        pavilionFireflyGuide.classList.add('is-waiting');
+        pavilionInteractionPhase = 'waiting';
+        setAct2Phase('PAVILION_WAITING');
+        pavilionReflectionHitTarget.classList.add('is-enabled');
+        pavilionReflectionHitTarget.setAttribute('aria-disabled', 'false');
+        // Text is a fallback only, after the firefly has had 3.6 seconds to guide attention.
+        queueAct2(3600, showPavilionReflectionHint);
+      });
+    }
+    function enterPavilionArrival() {
+      setAct2Phase('RIVER_TO_PAVILION');
+      act2Locked = true;
+      AudioController.setScene('pavilionArrival', 1500);
+      resetPavilionInteraction();
+      pavilionArrival.classList.add('active');
+      requestAnimationFrame(() => pavilionArrival.classList.add('is-dissolving-in'));
+      act2Scene.classList.add('is-river-dissolve-out');
+      queueAct2(1600, () => {
+        act2Scene.classList.remove('active', 'is-visible', 'is-river-dissolve-out');
+        pavilionArrival.classList.remove('is-dissolving-in');
+        pavilionArrival.classList.add('is-visible');
+        page = 'pavilionArrival';
+        storyState.currentScene = 'act2_pavilion_clean_hold';
+        setAct2Phase('PAVILION_CLEAN_HOLD');
+        queueAct2(1050, beginPavilionFireflyInteraction);
+      });
+    }
+    function beginDeliveryRiver() {
+      setAct2Phase('RIVER_CLEAN_HOLD');
+      act2Locked = true;
+      queueAct2(420, () => AudioController.playOneShot('boat'));
+      queueAct2(1000, () => {
+        setAct2Phase('RIVER_DELIVERY_TEXT_IN');
+        act2Scene.classList.add('is-drifting');
+        mountAct2Narrative(['江水替你', '把话带到了'], 550);
+        queueAct2(1450, () => {
+          setAct2Phase('RIVER_DELIVERY_TEXT_HOLD');
+          queueAct2(5200, () => {
+            setAct2Phase('RIVER_DELIVERY_TEXT_OUT');
+            fadeOutAct2Narrative(() => {
+              setAct2Phase('RIVER_APPROACH');
+              queueAct2(1000, beginRiverPaperInteraction);
+            }, 1000);
+          });
+        });
+      });
+    }
+    function beginDeliveryFromWeave() {
+      resetAct2Visuals();
+      AudioController.setScene('act2', 1200);
+      storyState.currentAct = 2;
+      storyState.currentScene = 'act2_river_delivery';
+      storyState.currentBeat = 0;
+      setAct2Phase('RIVER_DISSOLVE_IN');
+      act2Locked = true;
+      const weaveScene = document.getElementById('weave');
+      act2Scene.classList.add('active');
+      requestAnimationFrame(() => act2Scene.classList.add('is-dissolving-in'));
+      queueAct2(1500, () => {
+        weaveScene.classList.remove('active');
+        act2Scene.classList.remove('is-dissolving-in');
+        act2Scene.classList.add('is-visible');
+        page = 'act2';
+        beginDeliveryRiver();
+      });
+    }
+    function startDestinationEvent() {
+      const destination = storyState.destinationChoice;
+      const object = destination === 'net' ? act2NetPaper : act2WaterPaper;
+      setAct2Phase(destination === 'net' ? 'ACT2_NET_PAPER_IN' : 'ACT2_WATER_PAPER_IN');
+      act2Locked = true;
+      object.classList.add('is-visible');
+      act2Ripple.classList.remove('is-visible');
+      queueAct2(900, () => {
+        setAct2Phase(destination === 'net' ? 'ACT2_NET_TEXT' : 'ACT2_WATER_TEXT');
+        act2Ripple.classList.add('is-visible');
+        mountAct2Narrative(act2Branches[destination][0], 180);
+        queueAct2(880, () => {
+          queueAct2(1200, () => {
+            fadeOutAct2Narrative(() => {
+              if (destination === 'net') {
+                setAct2Phase('ACT2_NET_CHOICE');
+                queueAct2(200, () => {
+                  act2ChoiceStage.classList.add('is-visible');
+                  act2Locked = false;
+                });
+              } else {
+                continueWaterEvent();
+              }
+            });
+          });
+        });
+      });
+    }
+    function continueWaterEvent() {
+      setAct2Phase('ACT2_WATER_CONTINUE');
+      act2Locked = true;
+      queueAct2(900, () => {
+        mountAct2Narrative(act2Branches.water[1], 180);
+        queueAct2(880, () => {
+          queueAct2(1200, () => {
+            fadeOutAct2Narrative(() => {
+              act2WaterPaper.classList.add('is-sailing');
+              queueAct2(1700, mergeAct2Branches);
+            });
+          });
+        });
+      });
+    }
+    function mergeAct2Branches() {
+      act2Locked = true;
+      act2Phase = 'merging';
+      clearAct2Narrative();
+      act2ChoiceStage.classList.remove('is-visible', 'is-resolving');
+      act2NetPaper.classList.remove('is-visible');
+      act2WaterPaper.classList.remove('is-visible', 'is-sailing');
+      act2Ripple.classList.remove('is-visible');
+      window.setTimeout(() => {
+        storyState.currentScene = 'act2_paper_boat';
+        storyState.currentBeat = 0;
+        act2PaperBoat.classList.add('is-visible');
+        act2PaperLabel.classList.add('is-visible');
+        act2Phase = 'paper-boat';
+        act2Locked = false;
+      }, 900);
+    }
+    function resolveNetAction(action, selectedButton) {
+      if (act2Locked || act2Phase !== 'ACT2_NET_CHOICE') return;
+      act2Locked = true;
+      storyState.netAction = action;
+      storyState.currentScene = 'act2_net_action';
+      setAct2Phase('ACT2_NET_ACTION');
+      selectedButton.classList.add('is-selected');
+      act2ChoiceStage.classList.add('is-resolving');
+      queueAct2(500, () => {
+        act2ChoiceStage.classList.remove('is-visible');
+        mountAct2Narrative(action === 'retrieve' ? ['碎纸贴在掌心', '还带着一点水'] : ['碎纸又回到水里', '顺着篙影漂远了'], 180);
+        queueAct2(880, () => {
+          queueAct2(1200, () => fadeOutAct2Narrative(() => queueAct2(700, mergeAct2Branches)));
+        });
+      });
+    }
+    function revealOriginCallback() {
+      if (act2Locked || act2Phase !== 'paper-boat') return;
+      act2Locked = true;
+      act2PaperBoat.classList.remove('is-visible');
+      act2PaperLabel.classList.remove('is-visible');
+      storyState.currentScene = 'act2_origin_callback';
+      storyState.currentBeat = 1;
+      renderAct2Narrative(originCallbacks[storyState.originChoice]);
+      act2Phase = 'origin-callback';
+      window.setTimeout(() => {
+        clearAct2Narrative();
+        storyState.currentScene = 'act2_next';
+        storyState.currentBeat = 0;
+        act2Scene.classList.add('is-next-hook');
+        act2Phase = 'next-hook';
+        act2Locked = false;
+      }, 2900);
+    }
+    document.querySelectorAll('#act2 .act2-choice').forEach(choice => choice.addEventListener('click', () => resolveNetAction(choice.dataset.netAction, choice)));
+    act2PaperBoat.addEventListener('click', revealOriginCallback);
+    pavilionReflectionHitTarget.addEventListener('pointerup', handlePavilionFireflyPointer);
+    pavilionReflectionHitTarget.addEventListener('pointerenter', () => pavilionFireflyGuide.classList.add('is-hovered'));
+    pavilionReflectionHitTarget.addEventListener('pointerleave', () => pavilionFireflyGuide.classList.remove('is-hovered'));
+    const audioToggle = document.getElementById('audioToggle');
+    audioToggle.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      AudioController.unlock();
+      const muted = AudioController.setMuted(audioToggle.getAttribute('aria-pressed') !== 'true');
+      audioToggle.setAttribute('aria-pressed', String(muted));
+      audioToggle.setAttribute('aria-label', muted ? '取消静音' : '静音');
+      audioToggle.textContent = muted ? '静' : '声';
+    });
+    window.addEventListener('load', typeWriter);
+  </script>
+</body>
+</html>
